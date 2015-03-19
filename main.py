@@ -1,73 +1,39 @@
 import sqlite3
 import timeit
 
-from lib.priodict import priorityDictionary
+from lib.priority_queue import PriorityQueue
 
+def dijkstra_search(graph, start, goal):
+    frontier = PriorityQueue()
+    frontier.put(start, 0)
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
 
-def AStar(G, start, end, H):
-    D = {}    # dictionary of final distances
-    P = {}    # dictionary of predecessors
-    Q = priorityDictionary()   # est.dist. of non-final vert.
-    Q[start] = 0
+    while not frontier.empty():
+        current = frontier.get()
 
-    for v in Q:
-        D[v] = Q[v]
-        if v == end: break
-
-        for w in G[v]:
-            vwLength = D[v] + G[v][w] + H[w]
-            if w in D:
-                if vwLength < D[w]:
-                    raise ValueError()
-            elif w not in Q or vwLength < Q[w]:
-                Q[w] = vwLength
-                P[w] = v
-
-    return D, P
-
-def shortestPathAStar(G, start, end, H):
-    D, P = AStar(G, start, end, H)
-    Path = []
-    while 1:
-        Path.append(end)
-        if end == start:
+        if current == goal:
             break
-        end = P[end]
-    Path.reverse()
-    return Path
 
-def Dijkstra(G, start, end):
-    D = {}    # dictionary of final distances
-    P = {}    # dictionary of predecessors
-    Q = priorityDictionary()   # est.dist. of non-final vert.
-    Q[start] = 0
+        for next in graph[current].keys():
+            new_cost = cost_so_far[current] + graph[current][next]
+            if next not in cost_so_far or new_cost < cost_so_far[next]:
+                cost_so_far[next] = new_cost
+                priority = new_cost
+                frontier.put(next, priority)
+                came_from[next] = current
 
-    for v in Q:
-        D[v] = Q[v]
-        if v == end: break
+    return came_from, cost_so_far
 
-        for w in G[v]:
-            vwLength = D[v] + G[v][w]
-            if w in D:
-                if vwLength < D[w]:
-                    raise ValueError()
-            elif w not in Q or vwLength < Q[w]:
-                Q[w] = vwLength
-                P[w] = v
-
-    return D, P
-
-
-def shortestPathDijkstra(G, start, end):
-    D, P = Dijkstra(G, start, end)
-    Path = []
-    while 1:
-        Path.append(end)
-        if end == start:
-            break
-        end = P[end]
-    Path.reverse()
-    return Path
+def reconstruct_path(came_from, start, goal):
+    current = goal
+    path = [current]
+    while current != start:
+        current = came_from[current]
+        path.append(current)
+    return path[::-1]
 
 # Connecting to the database
 db = sqlite3.connect('poland.sqlite')
@@ -127,8 +93,10 @@ for node_id, distance in heuristic:
 astar_time = timeit.Timer('astar_path = shortestPathAStar(G, 1, 1000000, H)',
     'from __main__ import shortestPathAStar, G, H, astar_path').timeit(number=1)'''
 
-dijkstra_path = shortestPathDijkstra(G, 1, 100000)
-astar_path = shortestPathAStar(G, 1, 100000, H)
+came_from, cost_so_far = dijkstra_search(G, 1, 100000)
+dijkstra_path = reconstruct_path(came_from, 1, 100000)
+# dijkstra_path = shortestPathDijkstra(G, 1, 100000)
+# astar_path = shortestPathAStar(G, 1, 100000, H)
 
 # print 'Dijkstra: %f s' % dijkstra_time
 # print 'A*: %f s' % astar_time
@@ -140,10 +108,11 @@ def calc_cost(path):
     return cost
 
 
-print dijkstra_path == astar_path
+# print dijkstra_path == astar_path
 print dijkstra_path
-print astar_path
+# print astar_path
 
+print '%d' % len(dijkstra_path)
 print '%d = %f' % (len(dijkstra_path), calc_cost(dijkstra_path))
-print '%d = %f' % (len(astar_path), calc_cost(astar_path))
+# print '%d = %f' % (len(astar_path), calc_cost(astar_path))
 
