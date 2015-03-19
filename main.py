@@ -4,6 +4,7 @@ import sys
 from lib.timing import timing
 from dijkstra import Dijkstra
 from astar import AStar
+from astar_landmarks import AStarLandmarks
 
 # Connecting to the database
 db = sqlite3.connect('poland.sqlite')
@@ -27,9 +28,9 @@ road_query = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
 cur.execute(road_query)
 roads = cur.fetchall()
 for node_from, node_to, fromto, tofrom, length in roads:
-    if fromto:
+    # if fromto:
         G[node_from][node_to] = length
-    if tofrom:
+    # if tofrom:
         G[node_to][node_from] = length
 
 # We need to decide target now...
@@ -39,10 +40,12 @@ dest = int(sys.argv[1]) if len(sys.argv) > 1 else 1000000
 # Let's prepare classes
 dijkstra = Dijkstra(G, cur)
 astar = AStar(G, cur)
+astar_landmarks = AStarLandmarks(G, cur)
 
 # Precalculations
 dijkstra.precalc(src, dest)
 astar.precalc(src, dest)
+astar_landmarks.precalc(src, dest, 20)
 
 @timing
 def test_dijkstra():
@@ -52,8 +55,13 @@ def test_dijkstra():
 def test_astar():
     return astar.calc()
 
+@timing
+def test_astar_landmarks():
+    return astar_landmarks.calc()
+
 dijkstra_path = test_dijkstra()
 astar_path = test_astar()
+astar_landmarks_path = test_astar_landmarks()
 
 def calc_cost(path):
     cost = 0.0
@@ -62,9 +70,10 @@ def calc_cost(path):
     return cost
 
 
-print dijkstra_path == astar_path
+print dijkstra_path == astar_path == astar_landmarks_path
 # print dijkstra_path
 # print astar_path
 
 print '%d = %f' % (len(dijkstra_path), calc_cost(dijkstra_path))
 print '%d = %f' % (len(astar_path), calc_cost(astar_path))
+print '%d = %f' % (len(astar_landmarks_path), calc_cost(astar_landmarks_path))
