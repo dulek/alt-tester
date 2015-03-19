@@ -12,6 +12,7 @@ from path_finders.astar_landmarks import AStarLandmarks
 from lm_pickers.definied import DefiniedLMPicker
 from lm_pickers.rand import RandomLMPicker
 from lm_pickers.farthest import FarthestLMPicker
+from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker
 from lm_pickers.planar import PlanarLMPicker
 
 from visualize import visualize
@@ -56,12 +57,12 @@ for node_from, node_to, fromto, tofrom, length, geometry in roads:
 
 # We need to decide target now...
 src = 10  # 224979
-dest = int(sys.argv[1]) if len(sys.argv) > 1 else 5000  # 1142754
+dest = int(sys.argv[1]) if len(sys.argv) > 1 else 8000  # 1142754
 
 # Let's prepare classes
 dijkstra = Dijkstra(G, P, cur)
 astar = AStar(G, P, cur)
-astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, DefiniedLMPicker)
+astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, OptimizedFarthestLMPicker)
 
 # Precalculations
 dijkstra.precalc(src, dest)

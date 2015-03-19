@@ -2,10 +2,10 @@ import random
 
 from lib.priority_queue import PriorityQueue
 
-from lm_picker import LMPicker
+from farthest import FarthestLMPicker
 
 
-class FarthestLMPicker(LMPicker):
+class OptimizedFarthestLMPicker(FarthestLMPicker):
     def _dijkstra(self, lms):
         frontier = PriorityQueue()
         cost_so_far = {}
@@ -25,16 +25,21 @@ class FarthestLMPicker(LMPicker):
 
         return cost_so_far
 
-    def _get_farthest(self, lms):
-        dists = self._dijkstra(lms)
-        return max(dists.iterkeys(), key=(lambda key: dists[key]))
-
     def get_landmarks(self, lm_num=10):
         # First one at random
         lms = [random.choice(self.G.keys())]
 
         # Then greedily get farthest nodes from set
         for _i in xrange(1, lm_num):
+            lm = self._get_farthest(lms)
+            lms.append(lm)
+
+        # And now the optimizations...
+        for _i in xrange(0, 100):
+            # Remove landmark at random
+            lms.pop(random.choice(range(0, lm_num)))
+
+            # Find new farthest
             lm = self._get_farthest(lms)
             lms.append(lm)
 
