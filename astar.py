@@ -1,5 +1,6 @@
-from path_finder import PathFinder
 from lib.priority_queue import PriorityQueue
+
+from path_finder import PathFinder
 
 class AStar(PathFinder):
     def precalc(self, src, dest):
@@ -13,13 +14,8 @@ class AStar(PathFinder):
         target = self.db.fetchone()
 
         # Load distances to target for each node (basic A* heuristic)
-        '''heuristic_query = ("SELECT node_id, GeodesicLength(MakeLine(geometry, "
-                           "GeomFromText('%s'))) AS distance FROM roads_nodes;" % target[0])'''
         heuristic_query = ("SELECT node_id, Distance(geometry, "
                            "GeomFromText('%s')) AS distance FROM roads_nodes;" % target[0])
-        '''heuristic_query = ("SELECT node_id, Distance(Transform(geometry, 2180), "
-                           "Transform(GeomFromText('%s', 4326), 2180)) AS distance FROM "
-                           "roads_nodes;" % target[0])'''
         self.db.execute(heuristic_query)
         heuristic = self.db.fetchall()
 
@@ -28,6 +24,7 @@ class AStar(PathFinder):
             self.H[node_id] = distance;
 
     def calc(self):
+        visited_count = 0
         frontier = PriorityQueue()
         frontier.put(self.src, 0)
         came_from = {}
@@ -36,6 +33,7 @@ class AStar(PathFinder):
         cost_so_far[self.src] = 0
 
         while not frontier.empty():
+            visited_count += 1
             current = frontier.get()
 
             if current == self.dest:
@@ -49,4 +47,4 @@ class AStar(PathFinder):
                     frontier.put(next, priority)
                     came_from[next] = current
 
-        return self._reconstruct_path(came_from)
+        return self._reconstruct_path(came_from), visited_count

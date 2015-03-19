@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from _pyio import __metaclass__
 
 class PathFinder(object):
     __metaclass__ = ABCMeta
