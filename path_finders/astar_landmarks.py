@@ -4,9 +4,9 @@ from astar import AStar
 from lm_pickers.rand import RandomLMPicker
 
 class AStarLandmarks(AStar):
-    def __init__(self, G, db, lm_picker_cls=RandomLMPicker):
-        super(AStarLandmarks, self).__init__(G, db)
-        self.lm_picker = lm_picker_cls(self.G, self.db)
+    def __init__(self, G, P, db, lm_picker_cls=RandomLMPicker):
+        super(AStarLandmarks, self).__init__(G, P, db)
+        self.lm_picker = lm_picker_cls(self.G, self.P, self.db)
 
     def _dijkstra(self, lm):
         frontier = PriorityQueue()

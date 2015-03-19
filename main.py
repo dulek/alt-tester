@@ -14,7 +14,7 @@ from lm_pickers.farthest import FarthestLMPicker
 from lm_pickers.planar import PlanarLMPicker
 
 # Connecting to the database
-db = sqlite3.connect('gdansk.sqlite')
+db = sqlite3.connect('poland.sqlite')
 db.enable_load_extension(True)
 db.load_extension('libspatialite')
 cur = db.cursor()
@@ -44,18 +44,18 @@ for node_from, node_to, fromto, tofrom, length in roads:
         G[node_to][node_from] = length
 
 # We need to decide target now...
-src = 2
-dest = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
+src = 1142754
+dest = int(sys.argv[1]) if len(sys.argv) > 1 else 224979
 
 # Let's prepare classes
-dijkstra = Dijkstra(G, cur)
-astar = AStar(G, cur)
-astar_landmarks = AStarLandmarks(G, cur, RandomLMPicker)
+dijkstra = Dijkstra(G, P, cur)
+astar = AStar(G, P, cur)
+astar_landmarks = AStarLandmarks(G, P, cur, PlanarLMPicker)
 
 # Precalculations
 dijkstra.precalc(src, dest)
 astar.precalc(src, dest)
-astar_landmarks.precalc(src, dest, 32)
+astar_landmarks.precalc(src, dest, 16)
 
 @timing
 def test_dijkstra():

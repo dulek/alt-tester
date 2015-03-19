@@ -3,9 +3,10 @@ from abc import ABCMeta, abstractmethod
 class PathFinder(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, G, db):
+    def __init__(self, G, P, db):
         self.db = db
         self.G = G
+        self.P = P
         self.src = None
         self.dest = None
 
