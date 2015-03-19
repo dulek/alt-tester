@@ -2,3 +2,6 @@
 .project
 .pydevproject
 .idea
+plots
+wizualizacje
+*.sqlite
