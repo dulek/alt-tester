@@ -124,15 +124,6 @@ def test_astar():
     astar_path = reconstruct_path(came_from, source, dest)
     return astar_path
 
-# Get shortest paths
-'''dijkstra_time = timeit.Timer('test_dijkstra()',
-                             'from __main__ import test_dijkstra').timeit(number=3)
-astar_time = timeit.Timer('test_astar()',
-                          'from __main__ import test_astar').timeit(number=3)
-
-print 'Dijkstra: %f s' % dijkstra_time
-print 'A*: %f s' % astar_time'''
-
 dijkstra_path = test_dijkstra()
 astar_path = test_astar()
 
@@ -144,8 +135,8 @@ def calc_cost(path):
 
 
 print dijkstra_path == astar_path
-print dijkstra_path
-print astar_path
+# print dijkstra_path
+# print astar_path
 
 print '%d = %f' % (len(dijkstra_path), calc_cost(dijkstra_path))
 print '%d = %f' % (len(astar_path), calc_cost(astar_path))
