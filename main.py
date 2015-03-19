@@ -24,6 +24,7 @@ cur = db.cursor()
 
 # Graph definition
 G = {}  # Graph
+G_reversed = {}  # Graph with reversed edges - for A* landmarks heuristic
 P = {}  # Geographical points TODO: Node class and geom info in it?
 L = {}  # Roads geometries, TODO: Edge class and geom info in it?
 
@@ -32,6 +33,7 @@ node_query = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
 cur.execute(node_query)
 nodes = cur.fetchall()
 for i, geometry in nodes:
+    G_reversed[i] = {}
     G[i] = {}
     L[i] = {}
     P[i] = wkb.loads(str(geometry))
@@ -43,22 +45,23 @@ road_query = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
 cur.execute(road_query)
 roads = cur.fetchall()
 for node_from, node_to, fromto, tofrom, length, geometry in roads:
-    # TODO: That's broken, all paths assumed both ways
-    # if fromto:
+    if fromto:
         G[node_from][node_to] = length
+        G_reversed[node_to][node_from] = length
         L[node_from][node_to] = wkb.loads(str(geometry))
-    # if tofrom:
+    if tofrom:
         G[node_to][node_from] = length
+        G_reversed[node_to][node_from] = length
         L[node_to][node_from] = wkb.loads(str(geometry))
 
 # We need to decide target now...
-src = 123  # 224979
-dest = int(sys.argv[1]) if len(sys.argv) > 1 else 1500  # 1142754
+src = 10  # 224979
+dest = int(sys.argv[1]) if len(sys.argv) > 1 else 5000  # 1142754
 
 # Let's prepare classes
 dijkstra = Dijkstra(G, P, cur)
 astar = AStar(G, P, cur)
-astar_landmarks = AStarLandmarks(G, P, cur, FarthestLMPicker)
+astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, DefiniedLMPicker)
 
 # Precalculations
 dijkstra.precalc(src, dest)
