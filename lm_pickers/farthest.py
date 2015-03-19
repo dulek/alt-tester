@@ -4,6 +4,7 @@ from lib.priority_queue import PriorityQueue
 
 from lm_picker import LMPicker
 
+
 class FarthestLMPicker(LMPicker):
     def _dijkstra(self, lms):
         frontier = PriorityQueue()

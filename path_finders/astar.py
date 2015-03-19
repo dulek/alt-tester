@@ -2,6 +2,7 @@ from lib.priority_queue import PriorityQueue
 
 from path_finder import PathFinder
 
+
 class AStar(PathFinder):
     def precalc(self, src, dest):
         self.src = src
@@ -15,13 +16,14 @@ class AStar(PathFinder):
 
         # Load distances to target for each node (basic A* heuristic)
         heuristic_query = ("SELECT node_id, Distance(geometry, "
-                           "GeomFromText('%s')) AS distance FROM roads_nodes;" % target[0])
+                           "GeomFromText('%s')) AS distance FROM roads_nodes;"
+                           % target[0])
         self.db.execute(heuristic_query)
         heuristic = self.db.fetchall()
 
         self.H = {}
         for node_id, distance in heuristic:
-            self.H[node_id] = distance;
+            self.H[node_id] = distance
 
     def calc(self):
         visited_nodes = []

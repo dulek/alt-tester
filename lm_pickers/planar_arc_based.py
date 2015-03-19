@@ -6,6 +6,7 @@ from lm_picker import LMPicker
 
 # TODO: This doesn't perserve equality of area (or node count)... How to fix?
 
+
 class PlanarLMPicker(LMPicker):
     def get_landmarks(self, lm_num=10):
         # Get boundary and center of it

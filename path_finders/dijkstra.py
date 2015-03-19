@@ -1,5 +1,6 @@
 from astar import AStar
 
+
 class Dijkstra(AStar):
     def precalc(self, src, dest):
         self.src = src

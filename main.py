@@ -23,9 +23,9 @@ db.load_extension('libspatialite')
 cur = db.cursor()
 
 # Graph definition
-G = {} # Graph
-P = {} # Geographical points TODO: Node class and geom info in it?
-L = {} # Roads geometries, TODO: Edge class and geom info in it?
+G = {}  # Graph
+P = {}  # Geographical points TODO: Node class and geom info in it?
+L = {}  # Roads geometries, TODO: Edge class and geom info in it?
 
 # Load graph vertices
 node_query = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
@@ -52,8 +52,8 @@ for node_from, node_to, fromto, tofrom, length, geometry in roads:
         L[node_to][node_from] = wkb.loads(str(geometry))
 
 # We need to decide target now...
-src = 123 # 224979
-dest = int(sys.argv[1]) if len(sys.argv) > 1 else 1500 # 1142754
+src = 123  # 224979
+dest = int(sys.argv[1]) if len(sys.argv) > 1 else 1500  # 1142754
 
 # Let's prepare classes
 dijkstra = Dijkstra(G, P, cur)
@@ -65,21 +65,26 @@ dijkstra.precalc(src, dest)
 astar.precalc(src, dest)
 lms = astar_landmarks.precalc(src, dest, 8)
 
+
 @timing
 def test_dijkstra():
     return dijkstra.calc()
+
 
 @timing
 def test_astar():
     return astar.calc()
 
+
 @timing
 def test_astar_landmarks():
     return astar_landmarks.calc()
 
+
 dijkstra_path, dijkstra_visited = test_dijkstra()
 astar_path, astar_visited = test_astar()
 astar_landmarks_path, astar_landmarks_visited = test_astar_landmarks()
+
 
 def calc_cost(path):
     cost = 0.0
@@ -97,6 +102,8 @@ print '%d = %f, %d' % (len(astar_path), calc_cost(astar_path),
 print '%d = %f, %d' % (len(astar_landmarks_path),
                        calc_cost(astar_landmarks_path),
                        len(astar_landmarks_visited))
+
+exit()
 
 bounds_poland = (13.42529296875, 48.574789910928864, 24.23583984375,
                  55.12864906848878)

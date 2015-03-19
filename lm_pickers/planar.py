@@ -4,6 +4,7 @@ from shapely import geometry
 
 from lm_picker import LMPicker
 
+
 class PlanarLMPicker(LMPicker):
     def get_landmarks(self, lm_num=10):
         # Get boundary and center of it
@@ -32,7 +33,7 @@ class PlanarLMPicker(LMPicker):
                 if pol.contains(geom):
                     num += 1
 
-            # TOOD: More experiments on len(self.P) * 0.005 - with st. deviation
+            # TODO: More experiments on len(self.P) * 0.005 - with st. deviation
             if num > slice_nodes or slice_nodes - num <= len(self.P) * 0.0054:
                 pols.append(pol)
                 old_p = p
@@ -43,16 +44,15 @@ class PlanarLMPicker(LMPicker):
         pols.append(geometry.Polygon([(x.x, x.y) for x
                                       in [old_p, first_p, center]]))
 
-
         # Now find landmark per slice
         counts = [0 for i in xrange(0, lm_num)]
         maxes = [(-1, None, None) for i in xrange(0, lm_num)]
 
         for i, p in self.P.iteritems():
             for j in xrange(0, len(pols)):
-                if (pols[j].contains(p)):
+                if pols[j].contains(p):
                     counts[j] += 1
-                    if (maxes[j][0] < p.distance(center)):
+                    if maxes[j][0] < p.distance(center):
                         maxes[j] = (p.distance(center), i, p)
 
         print counts

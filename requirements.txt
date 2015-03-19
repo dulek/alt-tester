@@ -1,0 +1,10 @@
+# sudo apt-get install libgeos-dev
+shapely
+
+# sudo apt-get install libfreetype6-dev
+matplotlib
+
+descartes
+
+# sudo apt-get install libgeo-proj4-perl libgeos++-dev
+#
