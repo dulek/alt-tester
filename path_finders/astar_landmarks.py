@@ -1,7 +1,7 @@
 from lib.priority_queue import PriorityQueue
 
 from astar import AStar
-from lm_picker import RandomLMPicker
+from lm_pickers.rand import RandomLMPicker
 
 class AStarLandmarks(AStar):
     def __init__(self, G, db, lm_picker_cls=RandomLMPicker):

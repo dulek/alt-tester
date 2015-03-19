@@ -1,22 +1,27 @@
 import sys
 
+from shapely import wkb
 import sqlite3
 
 from lib.timing import timing
 
-from dijkstra import Dijkstra
-from astar import AStar
-from astar_landmarks import AStarLandmarks
-from lm_picker import RandomLMPicker, DefiniedLMPicker, GreedyFarthestLMPicker
+from path_finders.dijkstra import Dijkstra
+from path_finders.astar import AStar
+from path_finders.astar_landmarks import AStarLandmarks
+from lm_pickers.definied import DefiniedLMPicker
+from lm_pickers.rand import RandomLMPicker
+from lm_pickers.farthest import FarthestLMPicker
+from lm_pickers.planar import PlanarLMPicker
 
 # Connecting to the database
-db = sqlite3.connect('poland.sqlite')
+db = sqlite3.connect('gdansk.sqlite')
 db.enable_load_extension(True)
 db.load_extension('libspatialite')
 cur = db.cursor()
 
 # Graph definition
-G = {}
+G = {} # Graph
+P = {} # Geographical points TODO: Node class and geom info in it?
 
 # Load graph vertices
 node_query = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
@@ -24,6 +29,7 @@ cur.execute(node_query)
 nodes = cur.fetchall()
 for i, geometry in nodes:
     G[i] = {}
+    P[i] = wkb.loads(str(geometry))
 
 # Load graph edges
 road_query = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
@@ -38,8 +44,8 @@ for node_from, node_to, fromto, tofrom, length in roads:
         G[node_to][node_from] = length
 
 # We need to decide target now...
-src = 1142754
-dest = int(sys.argv[1]) if len(sys.argv) > 1 else 224979
+src = 2
+dest = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
 
 # Let's prepare classes
 dijkstra = Dijkstra(G, cur)
@@ -49,7 +55,7 @@ astar_landmarks = AStarLandmarks(G, cur, RandomLMPicker)
 # Precalculations
 dijkstra.precalc(src, dest)
 astar.precalc(src, dest)
-astar_landmarks.precalc(src, dest, 16)
+astar_landmarks.precalc(src, dest, 32)
 
 @timing
 def test_dijkstra():

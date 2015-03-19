@@ -1,34 +1,10 @@
-from abc import ABCMeta, abstractmethod
 import random
 
 from lib.priority_queue import PriorityQueue
 
-class LMPicker:
-    __metaclass__ = ABCMeta
+from lm_picker import LMPicker
 
-    def __init__(self, G, db):
-        self.G = G
-        self.db = db
-
-    @abstractmethod
-    def get_landmarks(self, lm_num=10):
-        pass
-
-class RandomLMPicker(LMPicker):
-    def get_landmarks(self, lm_num=10):
-        lms = {}
-        for _i in xrange(0, lm_num):
-            lms[random.choice(self.G.keys())] = {}
-
-        return lms
-
-class DefiniedLMPicker(LMPicker):
-    def get_landmarks(self, lm_num=10):
-        lms = [74066, 1189637, 502011, 925562, 1190330, 655656, 101989,
-               1033011, 503684, 1033830]
-        return {lm: {} for lm in lms}
-
-class GreedyFarthestLMPicker(LMPicker):
+class FarthestLMPicker(LMPicker):
     def _dijkstra(self, lms):
         frontier = PriorityQueue()
         cost_so_far = {}
