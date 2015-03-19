@@ -35,8 +35,7 @@ class AStarLandmarks(AStar):
         for lm in lms:
             lms[lm] = self._dijkstra(lm)
 
-        cpinf = 0
-        cminf = 0
+        cinf = 0
         cnan = 0
         self.H = {}
         for node_id in self.G.keys():
@@ -49,15 +48,13 @@ class AStarLandmarks(AStar):
                 for lm in lms.values()]));
 
             if self.H[node_id] == float('inf'):
-                cpinf += 1
-
-            if self.H[node_id] == float('-inf'):
-                cminf += 1
+                cinf += 1
 
             if self.H[node_id] == float('nan'):
                 cnan += 1
 
-        print 'Infs: %d' % cpinf
-        print '-Infs: %d' % cminf
+        print 'Infs: %d' % cinf
         print 'NaNs: %d' % cnan
-        print 'Nums: %d' % (len(self.H) - cpinf - cminf - cnan)
+        print 'Nums: %d' % (len(self.H) - cinf - cnan)
+
+        return lms

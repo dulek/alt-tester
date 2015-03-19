@@ -24,7 +24,7 @@ class AStar(PathFinder):
             self.H[node_id] = distance;
 
     def calc(self):
-        visited_count = 0
+        visited_nodes = []
         frontier = PriorityQueue()
         frontier.put(self.src, 0)
         came_from = {}
@@ -33,8 +33,8 @@ class AStar(PathFinder):
         cost_so_far[self.src] = 0
 
         while not frontier.empty():
-            visited_count += 1
             current = frontier.get()
+            visited_nodes.append(self.P[current])
 
             if current == self.dest:
                 break
@@ -47,4 +47,4 @@ class AStar(PathFinder):
                     frontier.put(next, priority)
                     came_from[next] = current
 
-        return self._reconstruct_path(came_from), visited_count
+        return self._reconstruct_path(came_from), visited_nodes
