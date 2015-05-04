@@ -18,7 +18,7 @@ from lm_pickers.planar import PlanarLMPicker
 from visualize import visualize
 
 # Connecting to the database
-db = sqlite3.connect('gdansk.sqlite')
+db = sqlite3.connect('gdansk2.sqlite')
 db.enable_load_extension(True)
 db.load_extension('libspatialite')
 cur = db.cursor()
@@ -62,7 +62,7 @@ dest = int(sys.argv[1]) if len(sys.argv) > 1 else 8000  # 1142754
 # Let's prepare classes
 dijkstra = Dijkstra(G, P, cur)
 astar = AStar(G, P, cur)
-astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, OptimizedFarthestLMPicker)
+astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestLMPicker)
 
 # Precalculations
 dijkstra.precalc(src, dest)
@@ -107,18 +107,20 @@ print '%d = %f, %d' % (len(astar_landmarks_path),
                        calc_cost(astar_landmarks_path),
                        len(astar_landmarks_visited))
 
-exit()
-
 bounds_poland = (13.42529296875, 48.574789910928864, 24.23583984375,
                  55.12864906848878)
 bounds_pomeranian = (16.8365478515625, 53.389880751560284, 19.5062255859375,
                      55.05949523049586)
+bounds_gdansk = (18.174, 54.007, 19.113, 54.8351)
 
 dijkstra_path_geom = [L[a][b] for a, b in pairwise(dijkstra_path)]
 astar_path_geom = [L[a][b] for a, b in pairwise(astar_path)]
 astar_landmarks_path_geom = [L[a][b] for a, b in pairwise(astar_landmarks_path)]
 
-visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian, 'dijkstra')
-visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
-visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
-          'astar-lms', [P[lm] for lm in lms])
+#visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian, 'dijkstra')
+#visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
+#visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
+#          'astar-lms', [P[lm] for lm in lms])
+
+visualize(P.values(), [], bounds_gdansk,
+          'astar-lms', [P[lm] for lm in lms], 0)

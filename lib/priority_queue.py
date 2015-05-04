@@ -1,4 +1,4 @@
-import heapq
+import heapq  # TODO: Use heap package instead
 
 
 class PriorityQueue:
