@@ -62,7 +62,7 @@ dest = int(sys.argv[1]) if len(sys.argv) > 1 else 8000  # 1142754
 # Let's prepare classes
 dijkstra = Dijkstra(G, P, cur)
 astar = AStar(G, P, cur)
-astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestLMPicker)
+astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, PlanarLMPicker)
 
 # Precalculations
 dijkstra.precalc(src, dest)
@@ -122,5 +122,4 @@ astar_landmarks_path_geom = [L[a][b] for a, b in pairwise(astar_landmarks_path)]
 #visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
 #          'astar-lms', [P[lm] for lm in lms])
 
-visualize(P.values(), [], bounds_gdansk,
-          'astar-lms', [P[lm] for lm in lms], 0)
+visualize(P.values(), [], bounds_gdansk, 'astar-lms', [P[lm] for lm in lms], 0)

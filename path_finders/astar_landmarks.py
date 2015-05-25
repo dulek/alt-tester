@@ -11,6 +11,7 @@ class AStarLandmarks(AStar):
         self.lm_picker = lm_picker_cls(self.G, self.P, self.db)
 
     def _dijkstra(self, lm, G):
+        # TODO: Replace with utils all_dijkstra
         frontier = PriorityQueue()
         frontier.put(lm, 0)
         cost_so_far = {}
