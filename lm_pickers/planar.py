@@ -56,4 +56,4 @@ class PlanarLMPicker(LMPicker):
 
             # TODO: Possible optimization if two lms are close.
 
-        return {lm: {} for lm in lms}, bounds, center
+        return {lm: {} for lm in lms}

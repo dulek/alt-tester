@@ -1,7 +1,5 @@
 import random
 
-from lib.priority_queue import PriorityQueue
-
 from farthest import FarthestLMPicker
 
 

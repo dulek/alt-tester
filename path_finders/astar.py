@@ -54,3 +54,4 @@ class AStar(PathFinder):
                     came_from[next] = current
 
         return self._reconstruct_path(came_from), visited_nodes
+
