@@ -1,4 +1,4 @@
-from lib.priority_queue import PriorityQueue
+from heap.heap import heap
 
 
 def chunks(l, n):
@@ -10,19 +10,20 @@ def chunks(l, n):
 
 
 def all_dijkstra(S, G):
-    frontier = PriorityQueue()
-    frontier.put(S, 0)
+    frontier = heap([])
     cost_so_far = {}
-    cost_so_far[S] = 0
+    for s in S:
+        frontier[s] = 0
+        cost_so_far[s] = 0
 
-    while not frontier.empty():
-        current = frontier.get()
+    while len(frontier):
+        current = frontier.pop()
 
         for next in G[current].keys():
             new_cost = cost_so_far[current] + G[current][next]
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 priority = new_cost
-                frontier.put(next, priority)
+                frontier[next] = priority
 
     return cost_so_far

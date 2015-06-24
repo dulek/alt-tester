@@ -1,32 +1,13 @@
 import random
 
-from lib.priority_queue import PriorityQueue
+from lib.utils import all_dijkstra
 
 from lm_picker import LMPicker
 
 
 class FarthestLMPicker(LMPicker):
-    def _dijkstra(self, lms):
-        frontier = PriorityQueue()
-        cost_so_far = {}
-        for lm in lms:
-            frontier.put(lm, 0)
-            cost_so_far[lm] = 0
-
-        while not frontier.empty():
-            current = frontier.get()
-
-            for next in self.G[current].keys():
-                new_cost = cost_so_far[current] + self.G[current][next]
-                if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost
-                    frontier.put(next, priority)
-
-        return cost_so_far
-
     def _get_farthest(self, lms):
-        dists = self._dijkstra(lms)
+        dists = all_dijkstra(lms, self.G)
         node = max(dists.iterkeys(), key=(lambda key: dists[key]))
         return node
 

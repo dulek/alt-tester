@@ -1,4 +1,4 @@
-from lib.priority_queue import PriorityQueue
+from heap.heap import heap
 
 from path_finder import PathFinder
 
@@ -27,18 +27,16 @@ class AStar(PathFinder):
 
     def calc(self):
         visited_nodes = []
-        frontier = PriorityQueue()
-        frontier.put(self.src, 0)
+        frontier = heap([])
+        frontier[self.src] = 0
         came_from = {}
         cost_so_far = {}
         came_from[self.src] = None
         cost_so_far[self.src] = 0
 
-        while not frontier.empty():
-            current = frontier.get()
-            visited_nodes.append(self.P[current]) # TODO: As we're using heapq
-            # this isn't good way of calculating. visited_nodes should be a set
-            # then.
+        while len(frontier):
+            current = frontier.pop()
+            visited_nodes.append(self.P[current])
 
             if current == self.dest:
                 break
@@ -47,10 +45,8 @@ class AStar(PathFinder):
                 new_cost = cost_so_far[current] + self.G[current][next]
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
-                    priority = new_cost + self.H[next] # TODO: Test with self.H
-                    # moved up to the condition (this is how some describe the
-                    # algorithm).
-                    frontier.put(next, priority)
+                    priority = new_cost + self.H[next]
+                    frontier[next] = priority
                     came_from[next] = current
 
         return self._reconstruct_path(came_from), visited_nodes

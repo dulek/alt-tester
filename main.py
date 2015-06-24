@@ -71,7 +71,7 @@ def main():
     # Let's prepare classes
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, PlanarLMPicker)
+    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestLMPicker)
 
     # Precalculations
     dijkstra.precalc(src, dest)

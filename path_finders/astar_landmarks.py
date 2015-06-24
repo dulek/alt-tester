@@ -1,4 +1,4 @@
-from lib.priority_queue import PriorityQueue
+from lib.utils import all_dijkstra
 
 from astar import AStar
 from lm_pickers.rand import RandomLMPicker
@@ -10,25 +10,6 @@ class AStarLandmarks(AStar):
         self.G_reversed = G_reversed
         self.lm_picker = lm_picker_cls(self.G, self.P, self.db)
 
-    def _dijkstra(self, lm, G):
-        # TODO: Replace with utils all_dijkstra
-        frontier = PriorityQueue()
-        frontier.put(lm, 0)
-        cost_so_far = {}
-        cost_so_far[lm] = 0
-
-        while not frontier.empty():
-            current = frontier.get()
-
-            for next in G[current].keys():
-                new_cost = cost_so_far[current] + G[current][next]
-                if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost
-                    frontier.put(next, priority)
-
-        return cost_so_far
-
     def precalc(self, src, dest, lm_num=5):
         self.src = src
         self.dest = dest
@@ -37,10 +18,10 @@ class AStarLandmarks(AStar):
         lms_rev = lms.copy()
 
         for lm in lms:
-            lms[lm] = self._dijkstra(lm, self.G)
+            lms[lm] = all_dijkstra([lm], self.G)
 
         for lm in lms_rev:
-            lms_rev[lm] = self._dijkstra(lm, self.G_reversed)
+            lms_rev[lm] = all_dijkstra([lm], self.G_reversed)
 
         cinf = 0
         cnan = 0

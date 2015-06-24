@@ -44,7 +44,7 @@ class PlanarLMPicker(LMPicker):
         chunked_nodes = utils.chunks(sorted_nodes, lm_num)
 
         # Calc distances from center
-        dists = utils.all_dijkstra(center_id, self.G)
+        dists = utils.all_dijkstra([center_id], self.G)
 
         bounds.append(sorted_nodes[0])
         for chunk in chunked_nodes:
