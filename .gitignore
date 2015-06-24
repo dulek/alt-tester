@@ -5,3 +5,5 @@
 plots
 wizualizacje
 *.sqlite
+*.pbf
+*.osm
