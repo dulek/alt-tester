@@ -59,8 +59,8 @@ def load_graph(cur):
 
 def main():
     db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk2.sqlite'
-    src = sys.argv[2] if len(sys.argv) > 2 else 10
-    dest = sys.argv[3] if len(sys.argv) > 3 else 1234
+    src = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+    dest = int(sys.argv[3]) if len(sys.argv) > 3 else 1234
 
     # Connecting to the database
     cur = connect_to_db(db_name)
@@ -71,12 +71,12 @@ def main():
     # Let's prepare classes
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestBLMPicker)
+    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestLMPicker)
 
     # Precalculations
     dijkstra.precalc(src, dest)
     astar.precalc(src, dest)
-    lms = astar_landmarks.precalc(src, dest, 2)
+    lms = astar_landmarks.precalc(src, dest, 16)
 
     dijkstra_path, dijkstra_visited = dijkstra.calc()
     astar_path, astar_visited = astar.calc()
