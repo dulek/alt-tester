@@ -10,7 +10,7 @@ from path_finders.astar import AStar
 from path_finders.astar_landmarks import AStarLandmarks
 from lm_pickers.definied import DefiniedLMPicker
 from lm_pickers.rand import RandomLMPicker
-from lm_pickers.farthest import FarthestLMPicker
+from lm_pickers.farthest import FarthestLMPicker, FarthestBLMPicker
 from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker
 from lm_pickers.planar import PlanarLMPicker
 
@@ -71,7 +71,7 @@ def main():
     # Let's prepare classes
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestLMPicker)
+    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestBLMPicker)
 
     # Precalculations
     dijkstra.precalc(src, dest)

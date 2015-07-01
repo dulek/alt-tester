@@ -32,18 +32,17 @@ def all_dijkstra(S, G):
 
 
 def all_bfs(S, G):
-    visited = set()
-    distances = {S: 0}
-    parents = {}
-    Q = deque([S])
+    distances = {}
+    Q = deque()
+    for s in S:
+        distances[s] = 0
+        Q.append(s)
 
     while Q:
         v = Q.popleft()
         for n in G[v]:
-            if n not in visited:
+            if n not in distances:
                 Q.append(n)
-                visited.add(n)
-                parents[n] = v
                 distances[n] = distances[v] + 1
 
     return distances

@@ -1,13 +1,16 @@
 import random
 
-from lib.utils import all_dijkstra
+from lib.utils import all_dijkstra, all_bfs
 
 from lm_picker import LMPicker
 
 
 class FarthestLMPicker(LMPicker):
+    def _get_dists(self, lms):
+        return all_dijkstra(lms, self.G)
+
     def _get_farthest(self, lms):
-        dists = all_dijkstra(lms, self.G)
+        dists = self._get_dists(lms)
         node = max(dists.iterkeys(), key=(lambda key: dists[key]))
         return node
 
@@ -24,3 +27,8 @@ class FarthestLMPicker(LMPicker):
 
         print 'Choosen landmarks: %s' % lms
         return {lm: {} for lm in lms}
+
+
+class FarthestBLMPicker(FarthestLMPicker):
+    def _get_dists(self, lms):
+        return all_bfs(lms, self.G)
