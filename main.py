@@ -17,7 +17,7 @@ from lm_pickers.planar import PlanarLMPicker
 from visualize import visualize
 
 def connect_to_db(db_name):
-    db = sqlite3.connect(db_name)
+    db = sqlite3.connect(db_name, isolation_level=None)
     db.enable_load_extension(True)
     db.load_extension('libspatialite')
     return db.cursor()

@@ -1,3 +1,5 @@
+from collections import deque
+
 from heap.heap import heap
 
 
@@ -27,3 +29,21 @@ def all_dijkstra(S, G):
                 frontier[next] = priority
 
     return cost_so_far
+
+
+def all_bfs(S, G):
+    visited = set()
+    distances = {S: 0}
+    parents = {}
+    Q = deque([S])
+
+    while Q:
+        v = Q.popleft()
+        for n in G[v]:
+            if n not in visited:
+                Q.append(n)
+                visited.add(n)
+                parents[n] = v
+                distances[n] = distances[v] + 1
+
+    return distances
