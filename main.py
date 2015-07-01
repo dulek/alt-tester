@@ -52,7 +52,7 @@ def load_graph(cur):
             L[node_from][node_to] = wkb.loads(str(geometry))
         if tofrom:
             G[node_to][node_from] = length
-            G_reversed[node_to][node_from] = length
+            G_reversed[node_from][node_to] = length
             L[node_to][node_from] = wkb.loads(str(geometry))
 
     return G, G_reversed, P, L
@@ -76,7 +76,7 @@ def main():
     # Precalculations
     dijkstra.precalc(src, dest)
     astar.precalc(src, dest)
-    lms = astar_landmarks.precalc(src, dest, 16)
+    lms = astar_landmarks.precalc(src, dest, 2)
 
     dijkstra_path, dijkstra_visited = dijkstra.calc()
     astar_path, astar_visited = astar.calc()
@@ -110,8 +110,8 @@ def main():
 
     #visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian, 'dijkstra')
     #visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
-    #visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
-    #          'astar-lms', [P[lm] for lm in lms])
+    visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
+              'astar-lms', [P[lm] for lm in lms])
 
 
 if __name__ == '__main__':

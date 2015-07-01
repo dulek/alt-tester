@@ -22,7 +22,7 @@ def main():
     while True:
         # Choose random start node and get BFS results from it
         S = random.choice(G.keys())
-        distances = all_bfs(S, G)
+        distances = all_bfs([S], G)
 
         if len(distances) > len(G) / 2: # Fair metric I think...
             break
