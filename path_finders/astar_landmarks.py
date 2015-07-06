@@ -11,6 +11,9 @@ class AStarLandmarks(AStar):
         self.G_reversed = G_reversed
         self.lm_picker = lm_picker_cls(self.G, self.P, self.db)
 
+        self.calculate_landmarks(lm_num)
+
+    def calculate_landmarks(self, lm_num):
         self.lms = self.lm_picker.get_landmarks(lm_num)
         self.lms_rev = self.lms.copy()
 
