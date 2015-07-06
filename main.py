@@ -1,4 +1,5 @@
 import sys
+import random
 
 from shapely import wkb
 import sqlite3
@@ -41,7 +42,7 @@ def load_graph(cur):
 
     # Load graph edges
     road_query = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
-                  "GLength(geometry) as length, AsBinary(geometry) as line "
+                  "length, AsBinary(geometry) as line "
                   "FROM roads;")
     cur.execute(road_query)
     roads = cur.fetchall()
@@ -57,30 +58,12 @@ def load_graph(cur):
 
     return G, G_reversed, P, L
 
-def main():
-    db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk2.sqlite'
-    src = int(sys.argv[2]) if len(sys.argv) > 2 else 10
-    dest = int(sys.argv[3]) if len(sys.argv) > 3 else 1234
 
-    # Connecting to the database
-    cur = connect_to_db(db_name)
-
-    # Load the graph
-    G, G_reversed, P, L = load_graph(cur)
-
-    # Let's prepare classes
-    dijkstra = Dijkstra(G, P, cur)
-    astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, PlanarBLMPicker)
-
-    # Precalculations
-    dijkstra.precalc(src, dest)
-    astar.precalc(src, dest)
-    lms = astar_landmarks.precalc(src, dest, 16)
-
-    dijkstra_path, dijkstra_visited = dijkstra.calc()
-    astar_path, astar_visited = astar.calc()
-    astar_landmarks_path, astar_landmarks_visited = astar_landmarks.calc()
+def query(G, L, src, dest, dijkstra, astar, astar_landmarks):
+    dijkstra_path, dijkstra_visited = dijkstra.calc(src, dest)
+    astar_path, astar_visited = astar.calc(src, dest)
+    astar_landmarks_path, astar_landmarks_visited = astar_landmarks.calc(src,
+                                                                         dest)
 
     def calc_cost(path):
         cost = 0.0
@@ -110,9 +93,37 @@ def main():
 
     #visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian, 'dijkstra')
     #visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
-    visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
-              'astar-lms', [P[lm] for lm in lms])
+    #visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
+    #          'astar-lms', [P[lm] for lm in lms])
 
+def main():
+    db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk_cleaned.sqlite'
+    u_src = int(sys.argv[2]) if len(sys.argv) > 2 else None
+    u_dest = int(sys.argv[3]) if len(sys.argv) > 3 else None
 
+    # Connecting to the database
+    cur = connect_to_db(db_name)
+
+    # Load the graph
+    G, G_reversed, P, L = load_graph(cur)
+
+    # Let's prepare classes
+    dijkstra = Dijkstra(G, P, cur)
+    astar = AStar(G, P, cur)
+    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestBLMPicker,
+                                     16)
+
+    runs = 1 if u_dest else 30
+
+    for _ in range(runs):
+        if not u_src or not u_dest:
+            src = random.choice(G.keys())
+            dest = random.choice(G.keys())
+        else:
+            src = u_src
+            dest = u_dest
+
+        print 'From: %d, To: %d' % (src, dest)
+        query(G, L, src, dest, dijkstra, astar, astar_landmarks)
 if __name__ == '__main__':
     main()

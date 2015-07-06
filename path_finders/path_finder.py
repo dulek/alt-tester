@@ -8,21 +8,19 @@ class PathFinder(object):
         self.db = db
         self.G = G
         self.P = P
-        self.src = None
-        self.dest = None
 
     @abstractmethod
-    def precalc(self, src, dest):
+    def heuristic(self, v, src, dest):
         pass
 
     @abstractmethod
     def calc(self):
         pass
 
-    def _reconstruct_path(self, came_from):
-        current = self.dest
+    def _reconstruct_path(self, came_from, src, dest):
+        current = dest
         path = [current]
-        while current != self.src:
+        while current != src:
             current = came_from[current]
             path.append(current)
         return path[::-1]
