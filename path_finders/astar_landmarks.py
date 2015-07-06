@@ -22,14 +22,14 @@ class AStarLandmarks(AStar):
 
     def heuristic(self, v, src, dest):
         def get_dist(mapping, node):
-            return abs(mapping[node] if node in mapping else float('inf'))
+            return mapping[node] if node in mapping else float('inf')
 
         candid = []
         for lm in self.lms.keys():
-            c = max(get_dist(self.lms[lm], v) -
-                    get_dist(self.lms[lm], dest),
-                    get_dist(self.lms_rev[lm], v) -
-                    get_dist(self.lms_rev[lm], dest))
+            c = max(
+                get_dist(self.lms[lm], dest) - get_dist(self.lms[lm], v),
+                get_dist(self.lms_rev[lm], v) - get_dist(self.lms_rev[lm], dest)
+            )
             candid.append(c)
 
-        return max(candid)
+        return abs(max(candid))
