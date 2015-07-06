@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from astar import AStar
 
 
@@ -6,9 +8,5 @@ class Dijkstra(AStar):
         self.src = src
         self.dest = dest
 
-        class ZeroDict():
-            def __getitem__(self, val):
-                return 0
-
         # Heuristic is always 0
-        self.H = ZeroDict()
+        self.H = defaultdict(lambda: 0)

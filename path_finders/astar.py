@@ -21,9 +21,7 @@ class AStar(PathFinder):
         self.db.execute(heuristic_query)
         heuristic = self.db.fetchall()
 
-        self.H = {}
-        for node_id, distance in heuristic:
-            self.H[node_id] = distance
+        self.H = {node_id: distance for node_id, distance in heuristic}
 
     def calc(self):
         visited_nodes = []
