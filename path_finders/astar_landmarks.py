@@ -32,7 +32,7 @@ class AStarLandmarks(AStar):
 
             candid = []
             for lm in lms.keys():
-                # TODO: Seems like this is it. Need more tests to confirm.
+                # TODO: Seems fine but needing distance when precalcing sucks!
                 c = max(get_dist(lms[lm], node_id) -
                         get_dist(lms[lm], self.dest),
                         get_dist(lms_rev[lm], node_id) -

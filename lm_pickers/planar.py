@@ -6,6 +6,9 @@ from lm_picker import LMPicker
 
 
 class PlanarLMPicker(LMPicker):
+    def _get_dists(self, lms):
+        return utils.all_dijkstra(lms, self.G)
+
     def get_landmarks(self, lm_num=10):
         lms = []
         bounds = []
@@ -44,7 +47,7 @@ class PlanarLMPicker(LMPicker):
         chunked_nodes = utils.chunks(sorted_nodes, lm_num)
 
         # Calc distances from center
-        dists = utils.all_dijkstra([center_id], self.G)
+        dists = self._get_dists([center_id])
 
         bounds.append(sorted_nodes[0])
         for chunk in chunked_nodes:
@@ -57,3 +60,8 @@ class PlanarLMPicker(LMPicker):
             # TODO: Possible optimization if two lms are close.
 
         return {lm: {} for lm in lms}
+
+
+class PlanarBLMPicker(PlanarLMPicker):
+    def _get_dists(self, lms):
+        return utils.all_bfs(lms, self.G)
