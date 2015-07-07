@@ -4,6 +4,7 @@ import sys
 from main import connect_to_db, load_graph
 from lib.utils import all_bfs
 
+
 def main():
     db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk2.sqlite'
 
@@ -24,7 +25,7 @@ def main():
         S = random.choice(G.keys())
         distances = all_bfs([S], G)
 
-        if len(distances) > len(G) / 2: # Fair metric I think...
+        if len(distances) > len(G) / 2:  # Fair metric I think...
             break
 
     removal_ids = set(G.keys()) - set(distances.keys())
@@ -32,7 +33,7 @@ def main():
     while removal_ids:
         print '%d left...' % len(removal_ids)
         chunk = [str(removal_ids.pop())
-                 for i in range(0, min(20, len(removal_ids)))]
+                 for _ in range(0, min(20, len(removal_ids)))]
         chunk = ','.join(chunk)
         del_query = 'DELETE FROM roads_nodes WHERE node_id IN (%s)' % chunk
         cur.execute(del_query)

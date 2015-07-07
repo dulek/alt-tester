@@ -31,7 +31,8 @@ class AStarLandmarks(AStar):
         for lm in self.lms.keys():
             c = max(
                 get_dist(self.lms[lm], dest) - get_dist(self.lms[lm], v),
-                get_dist(self.lms_rev[lm], v) - get_dist(self.lms_rev[lm], dest)
+                get_dist(self.lms_rev[lm], v) - get_dist(self.lms_rev[lm],
+                                                         dest)
             )
             candid.append(c)
 

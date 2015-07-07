@@ -17,11 +17,13 @@ from lm_pickers.planar import PlanarLMPicker, PlanarBLMPicker
 
 from visualize import visualize
 
+
 def connect_to_db(db_name):
     db = sqlite3.connect(db_name, isolation_level=None)
     db.enable_load_extension(True)
     db.load_extension('libspatialite')
     return db.cursor()
+
 
 def load_graph(cur):
     # Graph definition
@@ -31,8 +33,8 @@ def load_graph(cur):
     L = {}  # Roads geometries, TODO: Edge class and geom info in it?
 
     # Load graph vertices
-    node_query = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
-    cur.execute(node_query)
+    node_qr = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
+    cur.execute(node_qr)
     nodes = cur.fetchall()
     for i, geometry in nodes:
         G_reversed[i] = {}
@@ -41,10 +43,9 @@ def load_graph(cur):
         P[i] = wkb.loads(str(geometry))
 
     # Load graph edges
-    road_query = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
-                  "length, AsBinary(geometry) as line "
-                  "FROM roads;")
-    cur.execute(road_query)
+    road_qr = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
+               "length, AsBinary(geometry) as line FROM roads;")
+    cur.execute(road_qr)
     roads = cur.fetchall()
     for node_from, node_to, fromto, tofrom, length, geometry in roads:
         if fromto:
@@ -83,18 +84,21 @@ def query(G, L, src, dest, dijkstra, astar, astar_landmarks):
 
     bounds_poland = (13.42529296875, 48.574789910928864, 24.23583984375,
                      55.12864906848878)
-    bounds_pomeranian = (16.8365478515625, 53.389880751560284, 19.5062255859375,
+    bounds_pomeranian = (16.8365478515625, 53.389880751560284, 19.506225585937,
                          55.05949523049586)
     bounds_gdansk = (18.174, 54.007, 19.113, 54.8351)
 
     dijkstra_path_geom = [L[a][b] for a, b in pairwise(dijkstra_path)]
     astar_path_geom = [L[a][b] for a, b in pairwise(astar_path)]
-    astar_landmarks_path_geom = [L[a][b] for a, b in pairwise(astar_landmarks_path)]
+    astar_landmarks_path_geom = [L[a][b] for a, b
+                                 in pairwise(astar_landmarks_path)]
 
-    #visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian, 'dijkstra')
-    #visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
-    #visualize(astar_landmarks_visited, astar_landmarks_path_geom, bounds_pomeranian,
-    #          'astar-lms', [P[lm] for lm in lms])
+    # visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian,
+    #           'dijkstra')
+    # visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
+    # visualize(astar_landmarks_visited, astar_landmarks_path_geom,
+    #           bounds_pomeranian, 'astar-lms', [P[lm] for lm in lms])
+
 
 def main():
     db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk_cleaned.sqlite'

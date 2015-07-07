@@ -2,6 +2,7 @@ import unittest
 
 from lib import utils
 
+
 class UtilsTests(unittest.TestCase):
     def test_all_bfs(self):
         G = {
