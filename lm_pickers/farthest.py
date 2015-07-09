@@ -26,7 +26,7 @@ class FarthestLMPicker(LMPicker):
         lms.pop(0)  # Remove the first one
 
         print 'Choosen landmarks: %s' % lms
-        return {lm: {} for lm in lms}
+        return lms
 
 
 class FarthestBLMPicker(FarthestLMPicker):

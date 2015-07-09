@@ -14,13 +14,5 @@ class PathFinder(object):
         pass
 
     @abstractmethod
-    def calc(self):
+    def calc(self, src, dest):
         pass
-
-    def _reconstruct_path(self, came_from, src, dest):
-        current = dest
-        path = [current]
-        while current != src:
-            current = came_from[current]
-            path.append(current)
-        return path[::-1]

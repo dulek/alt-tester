@@ -6,14 +6,15 @@ import sqlite3
 
 from lib.pairwise import pairwise
 
-from path_finders.dijkstra import Dijkstra
-from path_finders.astar import AStar
-from path_finders.astar_landmarks import AStarLandmarks
+from lm_pickers.avoid import AvoidLMPicker
 from lm_pickers.definied import DefiniedLMPicker
 from lm_pickers.rand import RandomLMPicker
 from lm_pickers.farthest import FarthestLMPicker, FarthestBLMPicker
 from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker
 from lm_pickers.planar import PlanarLMPicker, PlanarBLMPicker
+from path_finders.dijkstra import Dijkstra
+from path_finders.astar import AStar
+from path_finders.astar_landmarks import AStarLandmarks
 
 from visualize import visualize
 
@@ -114,7 +115,7 @@ def main():
     # Let's prepare classes
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, FarthestBLMPicker,
+    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, AvoidLMPicker,
                                      16)
 
     runs = 1 if u_dest else 30

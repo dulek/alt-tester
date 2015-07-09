@@ -1,6 +1,7 @@
 from heap.heap import heap
 from LatLon import LatLon
 
+from lib.utils import reconstruct_path
 from path_finder import PathFinder
 
 
@@ -34,4 +35,4 @@ class AStar(PathFinder):
                     frontier[next] = priority
                     came_from[next] = current
 
-        return self._reconstruct_path(came_from, src, dest), visited_nodes
+        return reconstruct_path(came_from, src, dest), visited_nodes
