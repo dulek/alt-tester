@@ -25,4 +25,4 @@ class OptimizedFarthestLMPicker(FarthestLMPicker):
             lms.append(lm)
 
         print 'Choosen landmarks: %s' % lms
-        return lms
+        return self._calc_dists(lms)

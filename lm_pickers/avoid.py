@@ -9,13 +9,16 @@ class AvoidLMPicker(LMPicker):
     def get_landmarks(self, lm_num=10):
         # First one at random
         lms = [random.choice(self.G.keys())]
+        lm_dists = {}
+        lm_dists_rev = {}
+
+        # Calculate distances for new landmark
+        lm_dists.update(get_lm_distances(self.G, lms[-1:]))
+        lm_dists_rev.update(get_lm_distances(self.G_reversed, lms[-1:]))
 
         # And now real picking begins...
         for i in range(0, lm_num - 1):
             print 'Calculating landmark %d...' % i
-            # TODO: That's suboptimal, we don't need to recalculate everything.
-            lm_dists = get_lm_distances(self.G, lms)
-            lm_dists_rev = get_lm_distances(self.G_reversed, lms)
 
             r = random.choice(self.G.keys())
             r_dists, r_tree = all_dijkstra_tree(r, self.G)
@@ -59,7 +62,9 @@ class AvoidLMPicker(LMPicker):
             # Adding leaf as a new landmark
             lms.append(w)
 
-        # TODO: Should I remove the first one? Probably not!
+            # Calculate distances for new landmark
+            lm_dists.update(get_lm_distances(self.G, lms[-1:]))
+            lm_dists_rev.update(get_lm_distances(self.G_reversed, lms[-1:]))
 
         print 'Choosen landmarks: %s' % lms
-        return lms
+        return lms, lm_dists, lm_dists_rev

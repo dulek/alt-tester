@@ -59,7 +59,7 @@ class PlanarLMPicker(LMPicker):
 
             # TODO: Possible optimization if two lms are close.
 
-        return lms
+        return self._calc_dists(lms)
 
 
 class PlanarBLMPicker(PlanarLMPicker):

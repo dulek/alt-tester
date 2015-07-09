@@ -15,9 +15,8 @@ class AStarLandmarks(AStar):
         self.calculate_landmarks(lm_num)
 
     def calculate_landmarks(self, lm_num):
-        self.lms = self.lm_picker.get_landmarks(lm_num)
-        self.lms_dists = get_lm_distances(self.G, self.lms)
-        self.lms_dists_rev = get_lm_distances(self.G_reversed, self.lms)
+        self.lms, self.lms_dists, self.lms_dists_rev = \
+            self.lm_picker.get_landmarks(lm_num)
 
     def heuristic(self, v, src, dest):
         return get_lower_bound(self.lms_dists, self.lms_dists_rev, v, dest)
