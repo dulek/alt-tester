@@ -26,7 +26,7 @@ class AvoidLMPicker(LMPicker):
 
             r = random.choice(self.G.keys())
             LOG.debug('Choosen r=%d.', r)
-            r_dists, r_tree, r_parents = all_dijkstra_tree(r, self.G)
+            r_dists, r_tree, r_order = all_dijkstra_tree(r, self.G)
 
             # First calculate "weights".
             LOG.info('Calculating weights...')
@@ -39,10 +39,11 @@ class AvoidLMPicker(LMPicker):
             # Then "sizes" dependent on "weights"
             sizes = defaultdict(lambda: 0)
             w = None  # That's the node of max size
-            for v in self.G.keys():
-                if (v % 100) == 0:
-                    LOG.debug('Calculating size for node v=%d', v)
 
+            # We're processing the vertices in reversed order of Dijkstra
+            # algorithm. Basically we're starting on the leaves and going up.
+            # TODO: Is it any different from post-order tree traversal?
+            for v in reversed(r_order):
                 # Traverse subtree of r_tree rooted at v using DFS
                 Q = [v]
                 while Q:

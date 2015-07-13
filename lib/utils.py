@@ -51,10 +51,11 @@ def all_dijkstra_tree(S, G):
     frontier = heap([S])
     cost_so_far = {S: 0}
     tree = defaultdict(lambda: [])
-    parents = {}
+    order = []
 
     while len(frontier):
         current = frontier.pop()
+        order.append(current)
 
         for next in G[current].keys():
             new_cost = cost_so_far[current] + G[current][next]
@@ -63,9 +64,8 @@ def all_dijkstra_tree(S, G):
                 priority = new_cost
                 frontier[next] = priority
                 tree[current].append(next)
-                parents[next] = current
 
-    return cost_so_far, tree, parents
+    return cost_so_far, tree, order
 
 
 def reconstruct_path(came_from, src, dest):
