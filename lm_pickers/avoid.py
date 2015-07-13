@@ -1,6 +1,8 @@
 from collections import defaultdict
 import random
 
+from colorama import Fore
+
 from lib import logger
 from lib.utils import all_dijkstra_tree, get_lower_bound, get_lm_distances
 from lm_picker import LMPicker
@@ -22,20 +24,21 @@ class AvoidLMPicker(LMPicker):
 
         # And now real picking begins...
         for i in range(0, lm_num - 1):
-            LOG.info('Calculating landmark %d...', i)
+            LOG.info('Calculating landmark ' + Fore.RED + '%d' + Fore.RESET +
+                     '...', i)
 
             r = random.choice(self.G.keys())
-            LOG.debug('Choosen r=%d.', r)
+            LOG.debug('    Choosen r=%d.', r)
             r_dists, r_tree, r_order = all_dijkstra_tree(r, self.G)
 
             # First calculate "weights".
-            LOG.info('Calculating weights...')
+            LOG.info('    Calculating weights...')
             weights = {}
             for v in self.G.keys():
                 weights[v] = r_dists[v] - get_lower_bound(lm_dists,
                                                           lm_dists_rev, r, v)
 
-            LOG.info('Calculating sizes...')
+            LOG.info('    Calculating sizes...')
             # Then "sizes" dependent on "weights"
             sizes = defaultdict(lambda: 0)
             w = None  # That's the node of max size
@@ -71,7 +74,7 @@ class AvoidLMPicker(LMPicker):
                 if w is None or sizes[w] < sizes[v]:
                     w = v
 
-            LOG.info('Calculating landmark...')
+            LOG.info('    Calculating landmark...')
             # We have all the sizes calculated, and max one (w). Now we travese
             # subtree of r_tree rooted in w. We always choose branch of highest
             # size.
@@ -79,13 +82,14 @@ class AvoidLMPicker(LMPicker):
                 w = max(r_tree[w], key=lambda x: sizes[x])
 
             # Adding leaf as a new landmark
-            LOG.info('Calculated node %d as landmark.', w)
+            LOG.info('    Calculated node ' + Fore.RED + '%d' + Fore.RESET +
+                     ' as landmark.', w)
             lms.append(w)
 
             # Calculate distances for new landmark
-            LOG.info('Calculating distances for this landmark...')
+            LOG.info('    Calculating distances for this landmark...')
             lm_dists[w] = get_lm_distances(self.G, [w])[w]
             lm_dists_rev[w] = get_lm_distances(self.G_reversed, [w])[w]
 
-        LOG.info('Choosen landmarks: %s', str(lms))
+        LOG.info(Fore.RED + 'Choosen landmarks: %s' + Fore.RESET, str(lms))
         return lms, lm_dists, lm_dists_rev

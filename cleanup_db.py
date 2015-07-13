@@ -2,8 +2,10 @@ import random
 import sys
 
 from main import connect_to_db, load_graph
+from lib import logger
 from lib.utils import all_bfs
 
+LOG = logger.getLogger()
 
 def main():
     db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk2.sqlite'
@@ -31,7 +33,7 @@ def main():
     removal_ids = set(G.keys()) - set(distances.keys())
 
     while removal_ids:
-        print '%d left...' % len(removal_ids)
+        LOG.info('%d left...', len(removal_ids))
         chunk = [str(removal_ids.pop())
                  for _ in range(0, min(20, len(removal_ids)))]
         chunk = ','.join(chunk)

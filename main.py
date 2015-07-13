@@ -1,11 +1,13 @@
 import sys
 import random
 
+from colorama import Fore, Style
 from shapely import wkb
 import sqlite3
 
 from lib.pairwise import pairwise
 
+from lib import logger
 from lm_pickers.avoid import AvoidLMPicker
 from lm_pickers.definied import DefiniedLMPicker
 from lm_pickers.rand import RandomLMPicker
@@ -18,6 +20,8 @@ from path_finders.astar_landmarks import AStarLandmarks
 
 from visualize import visualize
 
+
+LOG = logger.getLogger()
 
 def connect_to_db(db_name):
     db = sqlite3.connect(db_name, isolation_level=None)
@@ -73,15 +77,20 @@ def query(G, L, src, dest, dijkstra, astar, astar_landmarks):
             cost += G[path[i - 1]][path[i]]
         return cost
 
-    print dijkstra_path == astar_path == astar_landmarks_path
+    if not (dijkstra_path == astar_path == astar_landmarks_path):
+        LOG.error(Fore.RED + "Paths doesn't match!" + Fore.RESET)
+    else:
+        LOG.info('    Length: %d', len(dijkstra_path))
+        LOG.info('    Cost: %f', calc_cost(dijkstra_path))
 
-    print '%d = %f, %d' % (len(dijkstra_path), calc_cost(dijkstra_path),
-                           len(dijkstra_visited))
-    print '%d = %f, %d' % (len(astar_path), calc_cost(astar_path),
-                           len(astar_visited))
-    print '%d = %f, %d' % (len(astar_landmarks_path),
-                           calc_cost(astar_landmarks_path),
-                           len(astar_landmarks_visited))
+    def print_info(alg, visited, ref_visited):
+        p = (float(len(visited)) / float(len(ref_visited))) * 100
+        LOG.info('    ' + Fore.MAGENTA + '%8s: ' + Fore.RED + '%8d' + Fore.GREEN
+                 + ' (%.2f)' + Fore.RESET, alg, len(visited), p)
+
+    print_info('Dijkstra', dijkstra_visited, dijkstra_visited)
+    print_info('A*', astar_visited, dijkstra_visited)
+    print_info('ALT', astar_landmarks_visited, astar_visited)
 
     bounds_poland = (13.42529296875, 48.574789910928864, 24.23583984375,
                      55.12864906848878)
@@ -115,8 +124,7 @@ def main():
     # Let's prepare classes
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, AvoidLMPicker,
-                                     16)
+    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, AvoidLMPicker, 16)
 
     runs = 1 if u_dest else 30
 
@@ -128,7 +136,8 @@ def main():
             src = u_src
             dest = u_dest
 
-        print 'From: %d, To: %d' % (src, dest)
+        LOG.info(Fore.BLUE + Style.DIM + 'From: %d, To: %d' + Style.RESET_ALL,
+                 src, dest)
         query(G, L, src, dest, dijkstra, astar, astar_landmarks)
 if __name__ == '__main__':
     main()

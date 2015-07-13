@@ -6,9 +6,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-ft = (Fore.GREEN + '%(asctime)s: ' + Fore.BLUE + '[%(levelname)s - s%(name)s] '
-      + Fore.RED + '%(message)s')
+ch.setLevel(logging.INFO)
+ft = (Fore.GREEN + '[%(levelname)s] %(asctime)s: ' + Fore.RESET + '%(message)s')
 formatter = logging.Formatter(ft)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
