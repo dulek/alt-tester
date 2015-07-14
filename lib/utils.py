@@ -1,4 +1,5 @@
 from collections import deque, defaultdict
+from itertools import tee, izip
 from random import choice
 
 from heap.heap import heap
@@ -122,3 +123,9 @@ def get_pairs(G):
         pairs.append((v, u))
 
     return pairs
+
+
+def pairwise(iterable):
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)

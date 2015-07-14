@@ -5,7 +5,7 @@ from colorama import Fore, Style
 from shapely import wkb
 import sqlite3
 
-from lib.pairwise import pairwise
+from lib.utils import pairwise
 
 from lib import logger
 from lm_pickers.avoid import AvoidLMPicker

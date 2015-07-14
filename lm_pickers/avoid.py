@@ -45,7 +45,6 @@ class AvoidLMPicker(LMPicker):
 
             # We're processing the vertices in reversed order of Dijkstra
             # algorithm. Basically we're starting on the leaves and going up.
-            # TODO: Is it any different from post-order tree traversal?
             for v in reversed(r_order):
                 # Traverse subtree of r_tree rooted at v using DFS
                 Q = [v]
