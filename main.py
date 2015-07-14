@@ -13,6 +13,7 @@ from lm_pickers.definied import DefiniedLMPicker
 from lm_pickers.rand import RandomLMPicker
 from lm_pickers.farthest import FarthestLMPicker, FarthestBLMPicker
 from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker
+from lm_pickers.optimized_rand import OptimizedRandomLMPicker
 from lm_pickers.planar import PlanarLMPicker, PlanarBLMPicker
 from path_finders.dijkstra import Dijkstra
 from path_finders.astar import AStar
@@ -65,7 +66,7 @@ def load_graph(cur):
     return G, G_reversed, P, L
 
 
-def query(G, L, src, dest, dijkstra, astar, astar_landmarks):
+def query(G, L, P, src, dest, dijkstra, astar, astar_landmarks):
     dijkstra_path, dijkstra_visited = dijkstra.calc(src, dest)
     astar_path, astar_visited = astar.calc(src, dest)
     astar_landmarks_path, astar_landmarks_visited = astar_landmarks.calc(src,
@@ -107,7 +108,8 @@ def query(G, L, src, dest, dijkstra, astar, astar_landmarks):
     #           'dijkstra')
     # visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
     # visualize(astar_landmarks_visited, astar_landmarks_path_geom,
-    #           bounds_pomeranian, 'astar-lms', [P[lm] for lm in lms])
+    #           bounds_pomeranian, 'astar-lms',
+    #           [P[lm] for lm in astar_landmarks.lms])
 
 
 def main():
@@ -124,7 +126,8 @@ def main():
     # Let's prepare classes
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed, AvoidLMPicker, 16)
+    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed,
+                                     OptimizedRandomLMPicker, 16)
 
     runs = 1 if u_dest else 30
 
@@ -138,6 +141,6 @@ def main():
 
         LOG.info(Fore.BLUE + Style.DIM + 'From: %d, To: %d' + Style.RESET_ALL,
                  src, dest)
-        query(G, L, src, dest, dijkstra, astar, astar_landmarks)
+        query(G, L, P, src, dest, dijkstra, astar, astar_landmarks)
 if __name__ == '__main__':
     main()
