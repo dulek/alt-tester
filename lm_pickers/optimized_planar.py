@@ -1,45 +1,45 @@
-import random
+from numpy import arctan2
+from shapely import geometry
 
 from lib import logger
-from lib.utils import get_lower_bound, get_single_lower_bound,\
-    get_lm_distances, get_pairs
-from rand import RandomLMPicker
+from lib.utils import all_dijkstra, chunks, get_lm_distances, get_lower_bound,\
+    get_single_lower_bound, get_pairs, all_bfs
+from planar import PlanarLMPicker
 
 
 LOG = logger.getLogger()
 
-class OptimizedRandomLMPicker(RandomLMPicker):
+class OptimizedPlanarLMPicker(PlanarLMPicker):
     def get_landmarks(self, lm_num=10):
-        # At first get landmarks at random
-        LOG.info('Choosing %d landmarks at random...', lm_num)
-        lms, lm_dists, lm_dists_rev = super(OptimizedRandomLMPicker,
+        # At first get landmarks from planar
+        LOG.info('Choosing %d landmarks by planar...', lm_num)
+        lms, lm_dists, lm_dists_rev = super(OptimizedPlanarLMPicker,
                                             self).get_landmarks(lm_num)
-        LOG.info('Random returned: %s.', str(lms))
+        LOG.info('Planar returned: %s.', str(lms))
 
         # Let's choose a sample of vertex pairs
         LOG.info('Choosing sample...')
         pairs = get_pairs(self.G)
         LOG.info('Sample choosen.')
 
-        # And now we're working to improve them
-        LOG.info('Optimizing landmarks...')
-        K = self.G.keys()
-        for i in xrange(lm_num):
+        chunked_nodes = chunks(self.sorted_nodes, lm_num)
+
+        # TODO: This code is duplicated with optimized_rand, refactoring?
+        i = 0
+        for chunk in chunked_nodes:
             LOG.info('Optimizing landmark %d=%d...', i, lms[i])
             LOG.info('    Geting %d candidates...', lm_num)
-            # Get lm_num - 1 at random and calculate
-            cands = random.sample(K, lm_num - 1)
-            while [x for x in cands if x in lms]:
-                # TODO: This probably isn't the best way, but should work.
-                cands = random.sample(K, lm_num - 1)
+            # We're chunking a chunk again!
+            cands = []
+            chunked_nodes2 = chunks(chunk, lm_num)
+            for chunk2 in chunked_nodes2:
+                cands.append(max(chunk2,
+                                 key=lambda k: self.dists[k]
+                                 if k in self.dists else 0))
+
             cands_scores = [0] * lm_num
             cands_dists = get_lm_distances(self.G, cands)
             cands_dists_rev = get_lm_distances(self.G_reversed, cands)
-
-            # Add current lm
-            cands.append(lms[i])
-            cands_dists[lms[i]] = lm_dists[lms[i]]
-            cands_dists_rev[lms[i]] = lm_dists_rev[lms[i]]
 
             LOG.info('    Choosen candidates: %s.', str(cands))
 
@@ -70,5 +70,13 @@ class OptimizedRandomLMPicker(RandomLMPicker):
             lms[i] = best
             lm_dists[best] = cands_dists[best]
             lm_dists_rev[best] = cands_dists_rev[best]
+            i += 1
+
+            # TODO: Possible optimization if two lms are close.
 
         return lms, lm_dists, lm_dists_rev
+
+
+class OptimizedPlanarBLMPicker(OptimizedPlanarLMPicker):
+    def _get_dists(self, lms):
+        return all_bfs(lms, self.G)

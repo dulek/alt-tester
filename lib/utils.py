@@ -90,6 +90,10 @@ def get_single_lower_bound(lm, lm_rev, v, dest):
 
 
 def get_lower_bound(lms, lms_rev, v, dest):
+    # TODO: Is this okay?
+    if not lms:
+        return 0
+
     def get_dist(mapping, node):
         return mapping[node] if node in mapping else float('inf')
 

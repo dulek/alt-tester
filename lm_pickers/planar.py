@@ -9,6 +9,10 @@ class PlanarLMPicker(LMPicker):
     def _get_dists(self, lms):
         return utils.all_dijkstra(lms, self.G)
 
+    def polarc(self, p):
+        t = geometry.Point(p.x - self.c.x, p.y - self.c.y)
+        return arctan2(t.y, t.x)
+
     def get_landmarks(self, lm_num=10):
         lms = []
         bounds = []
@@ -25,35 +29,27 @@ class PlanarLMPicker(LMPicker):
         center_id, _ = self.db.fetchone()
 
         # Get point
-        center = self.P[center_id]
-
-        def polarc(c, p):
-            """
-            :param c: Center of reference system.
-            :param p: Point to convert.
-            :return: Returns angle in polar coordinates.
-            """
-            t = geometry.Point(p.x - c.x, p.y - c.y)
-            return arctan2(t.y, t.x)
+        self.c = self.P[center_id]
 
         # Get a sorted copy
-        sorted_nodes = self.P.items()
-        sorted_nodes.sort(key=lambda x: polarc(center, x[1]))
+        self.sorted_nodes = self.P.items()
+        self.sorted_nodes.sort(key=lambda x: self.polarc(x[1]))
 
         # Get only the node_id
-        sorted_nodes = [x[0] for x in sorted_nodes]
+        self.sorted_nodes = [x[0] for x in self.sorted_nodes]
 
         # Chunk node_ids
-        chunked_nodes = utils.chunks(sorted_nodes, lm_num)
+        chunked_nodes = utils.chunks(self.sorted_nodes, lm_num)
 
         # Calc distances from center
-        dists = self._get_dists([center_id])
+        self.dists = self._get_dists([center_id])
 
-        bounds.append(sorted_nodes[0])
+        bounds.append(self.sorted_nodes[0])
         for chunk in chunked_nodes:
             # Get farthest node
             lms.append(max(chunk,
-                           key=lambda k: dists[k] if k in dists else 0))
+                           key=lambda k: self.dists[k]
+                           if k in self.dists else 0))
 
             bounds.append(chunk[-1])
 

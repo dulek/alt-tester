@@ -14,6 +14,7 @@ from lm_pickers.rand import RandomLMPicker
 from lm_pickers.farthest import FarthestLMPicker, FarthestBLMPicker
 from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker
 from lm_pickers.optimized_rand import OptimizedRandomLMPicker
+from lm_pickers.optimized_planar import OptimizedPlanarLMPicker
 from lm_pickers.planar import PlanarLMPicker, PlanarBLMPicker
 from path_finders.dijkstra import Dijkstra
 from path_finders.astar import AStar
@@ -127,7 +128,7 @@ def main():
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
     astar_landmarks = AStarLandmarks(G, P, cur, G_reversed,
-                                     OptimizedRandomLMPicker, 16)
+                                     OptimizedPlanarLMPicker, 16)
 
     runs = 1 if u_dest else 30
 
