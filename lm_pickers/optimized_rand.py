@@ -28,8 +28,10 @@ class OptimizedRandomLMPicker(RandomLMPicker):
             LOG.info('Optimizing landmark %d=%d...', i, lms[i])
             LOG.info('    Geting %d candidates...', lm_num)
             # Get lm_num - 1 at random and calculate
-            # TODO: Can we optimize this? Shuffle?
-            cands = random.sample(K, lm_num - 1) # TODO: Protect from choosing ones from lms
+            cands = random.sample(K, lm_num - 1)
+            while [x for x in cands if x in lms]:
+                # TODO: This probably isn't the best way, but should work.
+                cands = random.sample(K, lm_num - 1)
             cands_scores = [0] * lm_num
             cands_dists = get_lm_distances(self.G, cands)
             cands_dists_rev = get_lm_distances(self.G_reversed, cands)
