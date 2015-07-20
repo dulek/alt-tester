@@ -9,12 +9,13 @@ from lib.utils import pairwise
 
 from lib import logger
 from lm_pickers.avoid import AvoidLMPicker
-from lm_pickers.definied import DefiniedLMPicker
 from lm_pickers.rand import RandomLMPicker
 from lm_pickers.farthest import FarthestLMPicker, FarthestBLMPicker
-from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker
+from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker,\
+    OptimizedFarthestBLMPicker
 from lm_pickers.optimized_rand import OptimizedRandomLMPicker
-from lm_pickers.optimized_planar import OptimizedPlanarLMPicker
+from lm_pickers.optimized_planar import OptimizedPlanarLMPicker,\
+    OptimizedPlanarBLMPicker
 from lm_pickers.planar import PlanarLMPicker, PlanarBLMPicker
 from path_finders.dijkstra import Dijkstra
 from path_finders.astar import AStar
@@ -67,11 +68,13 @@ def load_graph(cur):
     return G, G_reversed, P, L
 
 
-def query(G, L, P, src, dest, dijkstra, astar, astar_landmarks):
-    dijkstra_path, dijkstra_visited = dijkstra.calc(src, dest)
-    astar_path, astar_visited = astar.calc(src, dest)
-    astar_landmarks_path, astar_landmarks_visited = astar_landmarks.calc(src,
-                                                                         dest)
+def query(G, L, P, src, dest, pfs, basic='Dijkstra', ref='A*'):
+    paths = {}
+    visited = {}
+    results = {}
+
+    for name, pf in pfs.iteritems():
+        paths[name], visited[name] = pf.calc(src, dest)
 
     def calc_cost(path):
         cost = 0.0
@@ -79,22 +82,23 @@ def query(G, L, P, src, dest, dijkstra, astar, astar_landmarks):
             cost += G[path[i - 1]][path[i]]
         return cost
 
-    if not (dijkstra_path == astar_path == astar_landmarks_path):
+    if not all(x == paths[basic] for x in paths.values()):
         LOG.error(Fore.RED + "Paths doesn't match!" + Fore.RESET)
     else:
-        LOG.info('    Length: %d', len(dijkstra_path))
-        LOG.info('    Cost: %f', calc_cost(dijkstra_path))
+        LOG.info('    Length: %d', len(paths[basic]))
+        LOG.info('    Cost: %f', calc_cost(paths[basic]))
 
     def print_info(alg, visited, ref_visited):
         p = (float(len(visited)) / float(len(ref_visited))) * 100
-        LOG.info('    ' + Fore.MAGENTA + '%8s: ' + Fore.RED + '%8d' + Fore.GREEN
+        LOG.info('    ' + Fore.MAGENTA + '%25s: ' + Fore.RED + '%8d' + Fore.GREEN
                  + ' (%.2f)' + Fore.RESET, alg, len(visited), p)
+        results[alg] = p
 
-    print_info('Dijkstra', dijkstra_visited, dijkstra_visited)
-    print_info('A*', astar_visited, dijkstra_visited)
-    print_info('ALT', astar_landmarks_visited, astar_visited)
+    for k in visited.keys():
+        print_info(k, visited[k], visited[ref])
 
-    bounds_poland = (13.42529296875, 48.574789910928864, 24.23583984375,
+    # TODO: Visualizations
+    """bounds_poland = (13.42529296875, 48.574789910928864, 24.23583984375,
                      55.12864906848878)
     bounds_pomeranian = (16.8365478515625, 53.389880751560284, 19.506225585937,
                          55.05949523049586)
@@ -105,18 +109,21 @@ def query(G, L, P, src, dest, dijkstra, astar, astar_landmarks):
     astar_landmarks_path_geom = [L[a][b] for a, b
                                  in pairwise(astar_landmarks_path)]
 
-    # visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian,
-    #           'dijkstra')
-    # visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
-    # visualize(astar_landmarks_visited, astar_landmarks_path_geom,
-    #           bounds_pomeranian, 'astar-lms',
-    #           [P[lm] for lm in astar_landmarks.lms])
+    visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian,
+              'dijkstra')
+    visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
+    visualize(astar_landmarks_visited, astar_landmarks_path_geom,
+              bounds_pomeranian, 'astar-lms',
+              [P[lm] for lm in astar_landmarks.lms])"""
+
+    return results
 
 
 def main():
     db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk_cleaned.sqlite'
-    u_src = int(sys.argv[2]) if len(sys.argv) > 2 else None
-    u_dest = int(sys.argv[3]) if len(sys.argv) > 3 else None
+    lm_num = int(sys.argv[2]) if len(sys.argv) > 2 else 16
+    u_src = int(sys.argv[3]) if len(sys.argv) > 3 else None
+    u_dest = int(sys.argv[4]) if len(sys.argv) > 4 else None
 
     # Connecting to the database
     cur = connect_to_db(db_name)
@@ -124,13 +131,38 @@ def main():
     # Load the graph
     G, G_reversed, P, L = load_graph(cur)
 
-    # Let's prepare classes
-    dijkstra = Dijkstra(G, P, cur)
-    astar = AStar(G, P, cur)
-    astar_landmarks = AStarLandmarks(G, P, cur, G_reversed,
-                                     OptimizedRandomLMPicker, 16)
+    # Let's prepare pathfinders classes
+    pfs = {}
+    pfs['Dijkstra'] = Dijkstra(G, P, cur)
+    pfs['A*'] = AStar(G, P, cur)
+    pfs['ALT-Random'] = AStarLandmarks(G, P, cur, G_reversed, RandomLMPicker,
+                                       lm_num)
+    pfs['ALT-Farthest'] = AStarLandmarks(G, P, cur, G_reversed,
+                                         FarthestLMPicker, lm_num)
+    pfs['ALT-FarthestB'] = AStarLandmarks(G, P, cur, G_reversed,
+                                          FarthestBLMPicker, lm_num)
+    pfs['ALT-Planar'] = AStarLandmarks(G, P, cur, G_reversed, PlanarLMPicker,
+                                       lm_num)
+    pfs['ALT-PlanarB'] = AStarLandmarks(G, P, cur, G_reversed, PlanarBLMPicker,
+                                        lm_num)
+    pfs['ALT-Avoid'] = AStarLandmarks(G, P, cur, G_reversed, AvoidLMPicker,
+                                      lm_num)
+    pfs['ALT-OptimizedFarthest'] = AStarLandmarks(G, P, cur, G_reversed,
+                                                  OptimizedFarthestLMPicker,
+                                                  lm_num)
+    pfs['ALT-OptimizedFarthestB'] = AStarLandmarks(G, P, cur, G_reversed,
+                                                   OptimizedFarthestBLMPicker,
+                                                   lm_num)
+    pfs['ALT-OptimizedPlanar'] = AStarLandmarks(G, P, cur, G_reversed,
+                                                OptimizedPlanarLMPicker, lm_num)
+    pfs['ALT-OptimizedPlanarB'] = AStarLandmarks(G, P, cur, G_reversed,
+                                                 OptimizedPlanarBLMPicker,
+                                                 lm_num)
+    pfs['ALT-OptimizedRandom'] = AStarLandmarks(G, P, cur, G_reversed,
+                                                OptimizedRandomLMPicker, lm_num)
 
-    runs = 1 if u_dest else 30
+    runs = 1 if u_dest else 50
+    results = {}
 
     for _ in range(runs):
         if not u_src or not u_dest:
@@ -142,6 +174,20 @@ def main():
 
         LOG.info(Fore.BLUE + Style.DIM + 'From: %d, To: %d' + Style.RESET_ALL,
                  src, dest)
-        query(G, L, P, src, dest, dijkstra, astar, astar_landmarks)
+        try:
+            results['%d-%d' % (src, dest)] = query(G, L, P, src, dest, pfs)
+        except Exception as e:
+            LOG.error(str(e))
+
+    avgs = {k: 0 for k in pfs.keys()}
+    for result in results.values():
+        for alg, p in result.iteritems():
+            avgs[alg] += p
+
+    LOG.info('Average results:')
+    for alg, avg in avgs.iteritems():
+        LOG.info('%25s: %.2f', alg, avg / runs)
+
+
 if __name__ == '__main__':
     main()
