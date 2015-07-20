@@ -128,7 +128,7 @@ def main():
     dijkstra = Dijkstra(G, P, cur)
     astar = AStar(G, P, cur)
     astar_landmarks = AStarLandmarks(G, P, cur, G_reversed,
-                                     OptimizedPlanarLMPicker, 16)
+                                     OptimizedRandomLMPicker, 16)
 
     runs = 1 if u_dest else 30
 
