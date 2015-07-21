@@ -126,7 +126,7 @@ def query(G, L, P, pairs, pfd, runs, baseline):
 
         flat_results[k] = avg / runs
 
-    return results
+    return flat_results
 
 
 def main():
