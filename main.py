@@ -5,26 +5,14 @@ from colorama import Fore, Style
 from shapely import wkb
 import sqlite3
 
-from lib.utils import pairwise
-
 from lib import logger
-from lm_pickers.avoid import AvoidLMPicker
-from lm_pickers.rand import RandomLMPicker
-from lm_pickers.farthest import FarthestLMPicker, FarthestBLMPicker
-from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker,\
-    OptimizedFarthestBLMPicker
-from lm_pickers.optimized_rand import OptimizedRandomLMPicker
-from lm_pickers.optimized_planar import OptimizedPlanarLMPicker,\
-    OptimizedPlanarBLMPicker
-from lm_pickers.planar import PlanarLMPicker, PlanarBLMPicker
-from path_finders.dijkstra import Dijkstra
-from path_finders.astar import AStar
-from path_finders.astar_landmarks import AStarLandmarks
-
+from lib.utils import pairwise
+from pfds import pfds
 from visualize import visualize
 
 
 LOG = logger.getLogger()
+
 
 def connect_to_db(db_name):
     db = sqlite3.connect(db_name, isolation_level=None)
@@ -68,53 +56,52 @@ def load_graph(cur):
     return G, G_reversed, P, L
 
 
-def query(G, L, P, src, dest, pfs, basic='Dijkstra', ref='A*'):
-    paths = {}
-    visited = {}
-    results = {}
+def get_pairs(G, file, rand_num):
+    pairs = []
 
-    for name, pf in pfs.iteritems():
-        paths[name], visited[name] = pf.calc(src, dest)
+    # TODO: Predefined ones loaded form a file?
 
-    def calc_cost(path):
+    while len(pairs) < rand_num:
+        src = random.choice(G.keys())
+        dest = random.choice(G.keys())
+        if src != dest:
+            pairs.append((src, dest))
+
+    return pairs
+
+
+def baseline_query(G, L, P, pairs, pfd):
+    baseline = {}
+
+    for src, dest in pairs:
+        path, visited = pfd.calc(src, dest)
+
         cost = 0.0
         for i in range(1, len(path)):
             cost += G[path[i - 1]][path[i]]
-        return cost
 
-    if not all(x == paths[basic] for x in paths.values()):
-        LOG.error(Fore.RED + "Paths doesn't match!" + Fore.RESET)
-    else:
-        LOG.info('    Length: %d', len(paths[basic]))
-        LOG.info('    Cost: %f', calc_cost(paths[basic]))
+        baseline['%d-%d' % (src, dest)] = len(visited), cost
 
-    def print_info(alg, visited, ref_visited):
-        p = (float(len(visited)) / float(len(ref_visited))) * 100
-        LOG.info('    ' + Fore.MAGENTA + '%25s: ' + Fore.RED + '%8d' + Fore.GREEN
-                 + ' (%.2f)' + Fore.RESET, alg, len(visited), p)
-        results[alg] = p
+    return baseline
 
-    for k in visited.keys():
-        print_info(k, visited[k], visited[ref])
 
-    # TODO: Visualizations
-    """bounds_poland = (13.42529296875, 48.574789910928864, 24.23583984375,
-                     55.12864906848878)
-    bounds_pomeranian = (16.8365478515625, 53.389880751560284, 19.506225585937,
-                         55.05949523049586)
-    bounds_gdansk = (18.174, 54.007, 19.113, 54.8351)
+def query(G, L, P, pairs, pfd, baseline):
+    results = {}
 
-    dijkstra_path_geom = [L[a][b] for a, b in pairwise(dijkstra_path)]
-    astar_path_geom = [L[a][b] for a, b in pairwise(astar_path)]
-    astar_landmarks_path_geom = [L[a][b] for a, b
-                                 in pairwise(astar_landmarks_path)]
+    for src, dest in pairs:
+        path, visited = pfd.calc(src, dest)
 
-    visualize(dijkstra_visited, dijkstra_path_geom, bounds_pomeranian,
-              'dijkstra')
-    visualize(astar_visited, astar_path_geom, bounds_pomeranian, 'astar')
-    visualize(astar_landmarks_visited, astar_landmarks_path_geom,
-              bounds_pomeranian, 'astar-lms',
-              [P[lm] for lm in astar_landmarks.lms])"""
+        cost = 0.0
+        for i in range(1, len(path)):
+            cost += G[path[i - 1]][path[i]]
+
+        if cost != baseline['%d-%d' % (src, dest)][1]:
+            LOG.error(Fore.RED + "Paths doesn't match!" + Fore.RESET)
+
+        p = (float(len(visited)) /
+             float(baseline['%d-%d' % (src, dest)][0])) * 100
+
+        results['%d-%d' % (src, dest)] = p
 
     return results
 
@@ -122,8 +109,7 @@ def query(G, L, P, src, dest, pfs, basic='Dijkstra', ref='A*'):
 def main():
     db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk_cleaned.sqlite'
     lm_num = int(sys.argv[2]) if len(sys.argv) > 2 else 16
-    u_src = int(sys.argv[3]) if len(sys.argv) > 3 else None
-    u_dest = int(sys.argv[4]) if len(sys.argv) > 4 else None
+    tests = 50
 
     # Connecting to the database
     cur = connect_to_db(db_name)
@@ -131,63 +117,39 @@ def main():
     # Load the graph
     G, G_reversed, P, L = load_graph(cur)
 
-    # Let's prepare pathfinders classes
-    p
-    gitfs = {}
-    pfs['Dijkstra'] = Dijkstra(G, P, cur)
-    pfs['A*'] = AStar(G, P, cur)
-    pfs['ALT-Random'] = AStarLandmarks(G, P, cur, G_reversed, RandomLMPicker,
-                                       lm_num)
-    pfs['ALT-Farthest'] = AStarLandmarks(G, P, cur, G_reversed,
-                                         FarthestLMPicker, lm_num)
-    pfs['ALT-FarthestB'] = AStarLandmarks(G, P, cur, G_reversed,
-                                          FarthestBLMPicker, lm_num)
-    pfs['ALT-Planar'] = AStarLandmarks(G, P, cur, G_reversed, PlanarLMPicker,
-                                       lm_num)
-    pfs['ALT-PlanarB'] = AStarLandmarks(G, P, cur, G_reversed, PlanarBLMPicker,
-                                        lm_num)
-    pfs['ALT-Avoid'] = AStarLandmarks(G, P, cur, G_reversed, AvoidLMPicker,
-                                      lm_num)
-    pfs['ALT-OptimizedFarthest'] = AStarLandmarks(G, P, cur, G_reversed,
-                                                  OptimizedFarthestLMPicker,
-                                                  lm_num)
-    pfs['ALT-OptimizedFarthestB'] = AStarLandmarks(G, P, cur, G_reversed,
-                                                   OptimizedFarthestBLMPicker,
-                                                   lm_num)
-    pfs['ALT-OptimizedPlanar'] = AStarLandmarks(G, P, cur, G_reversed,
-                                                OptimizedPlanarLMPicker, lm_num)
-    pfs['ALT-OptimizedPlanarB'] = AStarLandmarks(G, P, cur, G_reversed,
-                                                 OptimizedPlanarBLMPicker,
-                                                 lm_num)
-    pfs['ALT-OptimizedRandom'] = AStarLandmarks(G, P, cur, G_reversed,
-                                                OptimizedRandomLMPicker, lm_num)
-
-    runs = 1 if u_dest else 1000
+    # Decide on vertex pairs for the tests
+    pairs = get_pairs(G, None, tests)
     results = {}
 
-    for _ in range(runs):
-        if not u_src or not u_dest:
-            src = random.choice(G.keys())
-            dest = random.choice(G.keys())
+    # A* as baseline first
+    LOG.info('Baselining with A*.')
+    astar_info = pfds.pop('A*')
+    astar = astar_info['class'](G, P, cur)
+    baseline = baseline_query(G, L, P, pairs, astar)
+
+    # And now test on per-algorithm basis
+    for alg, pfd_info in pfds.iteritems():
+        LOG.info(Fore.RED + 'Starting %s tests.' + Style.RESET_ALL, alg)
+
+        if not pfd_info['lm_picker']:
+            pfd = pfd_info['class'](G, P, cur)
         else:
-            src = u_src
-            dest = u_dest
+            pfd = pfd_info['class'](G, P, cur, G_reversed,
+                                    pfd_info['lm_picker'], lm_num)
 
-        LOG.info(Fore.BLUE + Style.DIM + 'From: %d, To: %d' + Style.RESET_ALL,
-                 src, dest)
-        try:
-            results['%d-%d' % (src, dest)] = query(G, L, P, src, dest, pfs)
-        except Exception as e:
-            LOG.error(str(e))
+        results[alg] = query(G, L, P, pairs, pfd, baseline)
 
-    avgs = {k: 0 for k in pfs.keys()}
-    for result in results.values():
-        for alg, p in result.iteritems():
+    # Let's calculate averages
+    avgs = {k: 0. for k in pfds.keys()}
+    for alg in pfds.keys():
+        for p in results[alg].values():
             avgs[alg] += p
+
+        avgs[alg] /= tests
 
     LOG.info('Average results:')
     for alg, avg in avgs.iteritems():
-        LOG.info('%25s: %.2f', alg, avg / runs)
+        LOG.info('%25s: %.2f', alg, avg)
 
 
 if __name__ == '__main__':

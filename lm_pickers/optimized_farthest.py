@@ -7,6 +7,7 @@ from lib.utils import all_bfs
 
 LOG = logger.getLogger()
 
+
 class OptimizedFarthestLMPicker(FarthestLMPicker):
     def get_landmarks(self, lm_num=10):
         # Get lm_num landmarks at random

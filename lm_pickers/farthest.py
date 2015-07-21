@@ -8,6 +8,7 @@ from lm_picker import LMPicker
 
 LOG = logger.getLogger()
 
+
 class FarthestLMPicker(LMPicker):
     def _get_dists(self, lms):
         return all_dijkstra(lms, self.G)

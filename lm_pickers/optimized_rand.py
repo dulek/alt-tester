@@ -7,6 +7,7 @@ from rand import RandomLMPicker
 
 LOG = logger.getLogger()
 
+
 class OptimizedRandomLMPicker(RandomLMPicker):
     def get_landmarks(self, lm_num=10):
         # At first get landmarks at random
