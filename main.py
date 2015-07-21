@@ -1,4 +1,5 @@
 import sys
+import json
 import random
 
 from colorama import Fore, Style
@@ -56,10 +57,15 @@ def load_graph(cur):
     return G, G_reversed, P, L
 
 
-def get_pairs(G, file, rand_num):
+def get_pairs(G, filename, rand_num):
     pairs = []
 
-    # TODO: Predefined ones loaded form a file?
+    if filename:
+        with open(filename) as f:
+            json_pairs = json.load(f)
+
+        for pair in json_pairs:
+            pairs.append((pair['src'], pair['dest']))
 
     while len(pairs) < rand_num:
         src = random.choice(G.keys())
@@ -109,6 +115,7 @@ def query(G, L, P, pairs, pfd, runs, baseline):
             pfd.calculate_landmarks()
 
     # We need to flatten the results using average
+    # TODO: Calculating also standard deviation here would be beneficial.
     flat_results = {}
 
     for src, dest in pairs:
@@ -125,7 +132,8 @@ def query(G, L, P, pairs, pfd, runs, baseline):
 def main():
     db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk_cleaned.sqlite'
     lm_num = int(sys.argv[2]) if len(sys.argv) > 2 else 16
-    tests = 50
+    tests = int(sys.argv[3]) if len(sys.argv) > 3 else 50
+    filename = int(sys.argv[3]) if len(sys.argv) > 3 else None
 
     # Connecting to the database
     cur = connect_to_db(db_name)
@@ -134,7 +142,7 @@ def main():
     G, G_reversed, P, L = load_graph(cur)
 
     # Decide on vertex pairs for the tests
-    pairs = get_pairs(G, None, tests)
+    pairs = get_pairs(G, filename, tests)
     results = {}
 
     # A* as baseline first
