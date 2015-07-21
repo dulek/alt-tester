@@ -94,7 +94,6 @@ def get_single_lower_bound(lm, lm_rev, v, dest):
 
 
 def get_lower_bound(lms, lms_rev, v, dest):
-    # TODO: Is this okay?
     if not lms:
         return 0
 

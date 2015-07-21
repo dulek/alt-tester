@@ -1,4 +1,4 @@
-import sys
+import argparse
 import json
 import random
 
@@ -130,10 +130,19 @@ def query(G, L, P, pairs, pfd, runs, baseline):
 
 
 def main():
-    db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk_cleaned.sqlite'
-    lm_num = int(sys.argv[2]) if len(sys.argv) > 2 else 16
-    tests = int(sys.argv[3]) if len(sys.argv) > 3 else 50
-    filename = int(sys.argv[3]) if len(sys.argv) > 3 else None
+    parser = argparse.ArgumentParser(description='ALT-Tester')
+
+    parser.add_argument('--db', action="store", default='gdansk_cleaned.sqlite')
+    parser.add_argument('--landmarks', action="store", type=int, default=16)
+    parser.add_argument('--random-pairs', action="store", type=int, default=50)
+    parser.add_argument('--pairs-file', action="store")
+
+    arguments = parser.parse_args()
+
+    db_name = arguments.db
+    lm_num = arguments.landmarks
+    tests = arguments.random_pairs
+    filename = arguments.pairs_file
 
     # Connecting to the database
     cur = connect_to_db(db_name)
