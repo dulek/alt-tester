@@ -1,5 +1,6 @@
 import argparse
 import json
+from math import sqrt
 import random
 
 from colorama import Fore, Style
@@ -130,7 +131,6 @@ def query(G, L, P, pairs, pfd, runs, baseline):
         i += 1
 
     # We need to flatten the results using average
-    # TODO: Calculating also standard deviation here would be beneficial.
     flat_results = {}
 
     for src, dest in pairs:
@@ -141,7 +141,16 @@ def query(G, L, P, pairs, pfd, runs, baseline):
 
         flat_results[k] = avg / runs
 
-    return flat_results
+    std_dev = {}
+    for src, dest in pairs:
+        k = '%d-%d' % (src, dest)
+        s = 0.
+        for i in xrange(runs):
+            s += (results[i][k] - flat_results[k]) ** 2
+
+        std_dev[k] = sqrt(s / runs)
+
+    return flat_results, std_dev
 
 
 def main():
@@ -189,15 +198,20 @@ def main():
 
     # Let's calculate averages
     avgs = {k: 0. for k in pfds.keys()}
+    avg_sd = {k: 0. for k in pfds.keys()}
     for alg in pfds.keys():
-        for p in results[alg].values():
+        for p in results[alg][0].values():
             avgs[alg] += p
 
+        for std in results[alg][1].values():
+            avg_sd[alg] += std
+
         avgs[alg] /= tests
+        avg_sd[alg] /= tests
 
     LOG.info('Average results:')
     for alg, avg in avgs.iteritems():
-        LOG.info('%25s: %.2f', alg, avg)
+        LOG.info('%25s: %.2f (std_dev: %.2f)', alg, avg, avg_sd[alg])
 
     # TODO: Saving results to JSON file?
 
