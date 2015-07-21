@@ -20,7 +20,7 @@ def main():
     cur.execute(del_query)
 
     # Load the graph
-    G, _, _, _ = load_graph(cur)
+    G, G_reversed, _, _ = load_graph(cur)
 
     # To make sure we haven't chosen a cutoff node...
     while True:
@@ -31,7 +31,22 @@ def main():
         if len(distances) > len(G) / 2:  # Fair metric I think...
             break
 
-    removal_ids = set(G.keys()) - set(distances.keys())
+    removal_ids1 = set(G.keys()) - set(distances.keys())
+
+    # Let's do that again on reversed graph
+    while True:
+        # Choose random start node and get BFS results from it
+        S = random.choice(G_reversed.keys())
+        distances = all_bfs([S], G_reversed)
+
+        if len(distances) > len(G_reversed) / 2:  # Fair metric I think...
+            break
+
+    removal_ids2 = set(G.keys()) - set(distances.keys())
+
+    removal_ids = removal_ids1 | removal_ids2
+
+    import ipdb; ipdb.set_trace()
 
     while removal_ids:
         LOG.info('%d left...', len(removal_ids))
