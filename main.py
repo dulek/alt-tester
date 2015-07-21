@@ -25,8 +25,8 @@ def load_graph(cur):
     # Graph definition
     G = {}  # Graph
     G_reversed = {}  # Graph with reversed edges - for A* landmarks heuristic
-    P = {}  # Geographical points TODO: Node class and geom info in it?
-    L = {}  # Roads geometries, TODO: Edge class and geom info in it?
+    P = {}  # Geographical points
+    L = {}  # Roads geometries,
 
     # Load graph vertices
     node_qr = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
@@ -85,23 +85,39 @@ def baseline_query(G, L, P, pairs, pfd):
     return baseline
 
 
-def query(G, L, P, pairs, pfd, baseline):
+def query(G, L, P, pairs, pfd, runs, baseline):
     results = {}
 
+    for i in xrange(runs):
+        results[i] = {}
+        for src, dest in pairs:
+            path, visited = pfd.calc(src, dest)
+
+            cost = 0.0
+            for j in range(1, len(path)):
+                cost += G[path[j - 1]][path[j]]
+
+            if cost != baseline['%d-%d' % (src, dest)][1]:
+                LOG.error(Fore.RED + "Paths doesn't match!" + Fore.RESET)
+
+            p = (float(len(visited)) /
+                 float(baseline['%d-%d' % (src, dest)][0])) * 100
+
+            results[i]['%d-%d' % (src, dest)] = p
+
+        if runs > 1 and i != runs - 1:
+            pfd.calculate_landmarks()
+
+    # We need to flatten the results using average
+    flat_results = {}
+
     for src, dest in pairs:
-        path, visited = pfd.calc(src, dest)
+        k = '%d-%d' % (src, dest)
+        avg = 0.
+        for i in xrange(runs):
+            avg += results[i][k]
 
-        cost = 0.0
-        for i in range(1, len(path)):
-            cost += G[path[i - 1]][path[i]]
-
-        if cost != baseline['%d-%d' % (src, dest)][1]:
-            LOG.error(Fore.RED + "Paths doesn't match!" + Fore.RESET)
-
-        p = (float(len(visited)) /
-             float(baseline['%d-%d' % (src, dest)][0])) * 100
-
-        results['%d-%d' % (src, dest)] = p
+        flat_results[k] = avg / runs
 
     return results
 
@@ -137,7 +153,7 @@ def main():
             pfd = pfd_info['class'](G, P, cur, G_reversed,
                                     pfd_info['lm_picker'], lm_num)
 
-        results[alg] = query(G, L, P, pairs, pfd, baseline)
+        results[alg] = query(G, L, P, pairs, pfd, pfd_info['runs'], baseline)
 
     # Let's calculate averages
     avgs = {k: 0. for k in pfds.keys()}
@@ -150,6 +166,8 @@ def main():
     LOG.info('Average results:')
     for alg, avg in avgs.iteritems():
         LOG.info('%25s: %.2f', alg, avg)
+
+    # TODO: Saving results to JSON file?
 
 
 if __name__ == '__main__':

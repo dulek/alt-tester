@@ -11,7 +11,7 @@ from path_finders.dijkstra import Dijkstra
 from path_finders.astar import AStar
 from path_finders.astar_landmarks import AStarLandmarks
 
-runs = 20
+runs = 2
 
 pfds = {
     'Dijkstra': {

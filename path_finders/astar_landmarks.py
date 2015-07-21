@@ -14,7 +14,10 @@ class AStarLandmarks(AStar):
 
         self.calculate_landmarks(lm_num)
 
-    def calculate_landmarks(self, lm_num):
+    def calculate_landmarks(self, lm_num=None):
+        if not lm_num:
+            lm_num = len(self.lms)
+
         self.lms, self.lms_dists, self.lms_dists_rev = \
             self.lm_picker.get_landmarks(lm_num)
 
