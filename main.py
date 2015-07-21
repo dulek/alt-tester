@@ -94,10 +94,17 @@ def baseline_query(G, L, P, pairs, pfd):
 def query(G, L, P, pairs, pfd, runs, baseline):
     results = {}
 
-    for i in xrange(runs):
+    i = 0
+    while i < runs:
         results[i] = {}
         for src, dest in pairs:
-            path, visited = pfd.calc(src, dest)
+            try:
+                path, visited = pfd.calc(src, dest)
+            except Exception as e:
+                # Okay, this probably won't be useful result...
+                LOG.error(str(e))
+                i -= 1
+                break
 
             cost = 0.0
             for j in range(1, len(path)):
@@ -105,6 +112,8 @@ def query(G, L, P, pairs, pfd, runs, baseline):
 
             if cost != baseline['%d-%d' % (src, dest)][1]:
                 LOG.error(Fore.RED + "Paths doesn't match!" + Fore.RESET)
+                LOG.error(Fore.RED + ("%f != %f" % (cost,
+                    baseline['%d-%d' % (src, dest)][1])) + Fore.RESET)
 
             p = (float(len(visited)) /
                  float(baseline['%d-%d' % (src, dest)][0])) * 100
@@ -112,7 +121,13 @@ def query(G, L, P, pairs, pfd, runs, baseline):
             results[i]['%d-%d' % (src, dest)] = p
 
         if runs > 1 and i != runs - 1:
-            pfd.calculate_landmarks()
+            try:
+                pfd.calculate_landmarks()
+            except:
+                # FIXME: Naive way of trying again
+                pfd.calculate_landmarks()
+
+        i += 1
 
     # We need to flatten the results using average
     # TODO: Calculating also standard deviation here would be beneficial.
