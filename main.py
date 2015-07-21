@@ -132,7 +132,8 @@ def main():
     G, G_reversed, P, L = load_graph(cur)
 
     # Let's prepare pathfinders classes
-    pfs = {}
+    p
+    gitfs = {}
     pfs['Dijkstra'] = Dijkstra(G, P, cur)
     pfs['A*'] = AStar(G, P, cur)
     pfs['ALT-Random'] = AStarLandmarks(G, P, cur, G_reversed, RandomLMPicker,
@@ -161,7 +162,7 @@ def main():
     pfs['ALT-OptimizedRandom'] = AStarLandmarks(G, P, cur, G_reversed,
                                                 OptimizedRandomLMPicker, lm_num)
 
-    runs = 1 if u_dest else 50
+    runs = 1 if u_dest else 1000
     results = {}
 
     for _ in range(runs):

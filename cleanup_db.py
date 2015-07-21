@@ -7,8 +7,9 @@ from lib.utils import all_bfs
 
 LOG = logger.getLogger()
 
+
 def main():
-    db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk2.sqlite'
+    db_name = sys.argv[1] if len(sys.argv) > 1 else 'gdansk_cleaned.sqlite'
 
     # Connecting to the database
     cur = connect_to_db(db_name)
