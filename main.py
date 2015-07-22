@@ -1,6 +1,7 @@
 import argparse
 import json
 from math import sqrt
+import os
 import random
 
 from colorama import Fore, Style
@@ -17,6 +18,7 @@ LOG = logger.getLogger()
 
 
 def connect_to_db(db_name):
+    db_name = os.path.join('data', db_name)
     db = sqlite3.connect(db_name, isolation_level=None)
     db.enable_load_extension(True)
     db.load_extension('libspatialite')

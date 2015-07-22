@@ -46,8 +46,6 @@ def main():
 
     removal_ids = removal_ids1 | removal_ids2
 
-    import ipdb; ipdb.set_trace()
-
     while removal_ids:
         LOG.info('%d left...', len(removal_ids))
         chunk = [str(removal_ids.pop())
