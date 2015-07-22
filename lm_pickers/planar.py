@@ -17,19 +17,8 @@ class PlanarLMPicker(LMPicker):
         lms = []
         bounds = []
 
-        # Get boundary and center of it
-        mp = geometry.MultiPoint(self.P.values())
-
-        # Get node closest to the center
-        center_query = ("SELECT node_id, "
-                        "Distance(MakePoint(%f, %f), geometry) as dist "
-                        "FROM roads_nodes ORDER BY dist LIMIT 1;" %
-                        (mp.centroid.x, mp.centroid.y))
-        self.db.execute(center_query)
-        center_id, _ = self.db.fetchone()
-
         # Get point
-        self.c = self.P[center_id]
+        self.c = self.P[self.center]
 
         # Get a sorted copy
         self.sorted_nodes = self.P.items()
@@ -42,7 +31,7 @@ class PlanarLMPicker(LMPicker):
         chunked_nodes = utils.chunks(self.sorted_nodes, lm_num)
 
         # Calc distances from center
-        self.dists = self._get_dists([center_id])
+        self.dists = self._get_dists([self.center])
 
         bounds.append(self.sorted_nodes[0])
         for chunk in chunked_nodes:

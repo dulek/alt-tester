@@ -1,11 +1,13 @@
 import argparse
 import json
 from math import sqrt
+from multiprocessing import Pool
 import os
 import random
+import signal
 
 from colorama import Fore, Style
-from shapely import wkb
+from shapely import geometry, wkb
 import sqlite3
 
 from lib import logger
@@ -36,28 +38,38 @@ def load_graph(cur):
     node_qr = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
     cur.execute(node_qr)
     nodes = cur.fetchall()
-    for i, geometry in nodes:
+    for i, g in nodes:
         G_reversed[i] = {}
         G[i] = {}
         L[i] = {}
-        P[i] = wkb.loads(str(geometry))
+        P[i] = wkb.loads(str(g))
 
     # Load graph edges
     road_qr = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
                "length, AsBinary(geometry) as line FROM roads;")
     cur.execute(road_qr)
     roads = cur.fetchall()
-    for node_from, node_to, fromto, tofrom, length, geometry in roads:
+    for node_from, node_to, fromto, tofrom, length, g in roads:
         if fromto:
             G[node_from][node_to] = length
             G_reversed[node_to][node_from] = length
-            L[node_from][node_to] = wkb.loads(str(geometry))
+            L[node_from][node_to] = wkb.loads(str(g))
         if tofrom:
             G[node_to][node_from] = length
             G_reversed[node_from][node_to] = length
-            L[node_to][node_from] = wkb.loads(str(geometry))
+            L[node_to][node_from] = wkb.loads(str(g))
 
-    return G, G_reversed, P, L
+    # Get node closest to the center
+    # Get boundary and center of it
+    mp = geometry.MultiPoint(P.values())
+    center_query = ("SELECT node_id, "
+                    "Distance(MakePoint(%f, %f), geometry) as dist "
+                    "FROM roads_nodes ORDER BY dist LIMIT 1;" %
+                    (mp.centroid.x, mp.centroid.y))
+    cur.execute(center_query)
+    center, _ = cur.fetchone()
+
+    return G, G_reversed, P, L, center
 
 
 def get_pairs(G, filename, rand_num):
@@ -155,26 +167,24 @@ def query(G, L, P, pairs, pfd, runs, baseline):
     return flat_results, std_dev
 
 
-def main():
-    parser = argparse.ArgumentParser(description='ALT-Tester')
+def worker(pfd_info, pairs, alg, G, L, P, center, G_reversed, lm_num, baseline):
+    LOG.info(Fore.RED + 'Starting %s tests.' + Style.RESET_ALL, alg)
 
-    parser.add_argument('--db', action="store", default='gdansk_cleaned.sqlite')
-    parser.add_argument('--landmarks', action="store", type=int, default=16)
-    parser.add_argument('--random-pairs', action="store", type=int, default=50)
-    parser.add_argument('--pairs-file', action="store")
+    if not pfd_info['lm_picker']:
+        pfd = pfd_info['class'](G, P)
+    else:
+        pfd = pfd_info['class'](G, P, center, G_reversed,
+                                pfd_info['lm_picker'], lm_num)
 
-    arguments = parser.parse_args()
+    return alg, query(G, L, P, pairs, pfd, pfd_info['runs'], baseline)
 
-    db_name = arguments.db
-    lm_num = arguments.landmarks
-    tests = arguments.random_pairs
-    filename = arguments.pairs_file
 
+def main(pool, db_name, lm_num, tests, filename):
     # Connecting to the database
     cur = connect_to_db(db_name)
 
     # Load the graph
-    G, G_reversed, P, L = load_graph(cur)
+    G, G_reversed, P, L, center = load_graph(cur)
 
     # Decide on vertex pairs for the tests
     pairs = get_pairs(G, filename, tests)
@@ -183,20 +193,22 @@ def main():
     # A* as baseline first
     LOG.info('Baselining with A*.')
     astar_info = pfds.pop('A*')
-    astar = astar_info['class'](G, P, cur)
+    astar = astar_info['class'](G, P)
     baseline = baseline_query(G, L, P, pairs, astar)
 
     # And now test on per-algorithm basis
     for alg, pfd_info in pfds.iteritems():
-        LOG.info(Fore.RED + 'Starting %s tests.' + Style.RESET_ALL, alg)
+        def callback(res):
+            alg, res = res
+            results[alg] = res
 
-        if not pfd_info['lm_picker']:
-            pfd = pfd_info['class'](G, P, cur)
-        else:
-            pfd = pfd_info['class'](G, P, cur, G_reversed,
-                                    pfd_info['lm_picker'], lm_num)
+        r = pool.apply_async(worker, args=(pfd_info, pairs, alg, G, L, P,
+                                           center, G_reversed, lm_num,
+                                           baseline),
+                             callback=callback)
 
-        results[alg] = query(G, L, P, pairs, pfd, pfd_info['runs'], baseline)
+    pool.close()
+    pool.join()
 
     # Let's calculate averages
     avgs = {k: 0. for k in pfds.keys()}
@@ -219,4 +231,20 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='ALT-Tester')
+
+    parser.add_argument('--db', action="store", default='gdansk_cleaned.sqlite')
+    parser.add_argument('--landmarks', action="store", type=int, default=16)
+    parser.add_argument('--random-pairs', action="store", type=int, default=50)
+    parser.add_argument('--pairs-file', action="store")
+    parser.add_argument('--processes', action="store", type=int, default=1)
+
+    arguments = parser.parse_args()
+
+    # Create a process pool
+    LOG.info('Creating %d processes.', arguments.processes)
+    pool = Pool(processes=arguments.processes)
+
+    # Run the program
+    main(pool, arguments.db, arguments.landmarks, arguments.random_pairs,
+         arguments.pairs_file)

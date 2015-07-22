@@ -5,12 +5,12 @@ from lm_pickers.rand import RandomLMPicker
 
 
 class AStarLandmarks(AStar):
-    def __init__(self, G, P, db, G_reversed, lm_picker_cls=RandomLMPicker,
+    def __init__(self, G, P, center, G_reversed, lm_picker_cls=RandomLMPicker,
                  lm_num=8):
-        super(AStarLandmarks, self).__init__(G, P, db)
+        super(AStarLandmarks, self).__init__(G, P)
         self.G_reversed = G_reversed
         self.lm_picker = lm_picker_cls(self.G, self.G_reversed, self.P,
-                                       self.db)
+                                       center)
 
         self.calculate_landmarks(lm_num)
 
