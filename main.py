@@ -179,7 +179,7 @@ def worker(pfd_info, pairs, alg, G, L, P, center, G_reversed, lm_num, baseline):
     return alg, query(G, L, P, pairs, pfd, pfd_info['runs'], baseline)
 
 
-def main(pool, db_name, lm_num, tests, filename):
+def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
     # Connecting to the database
     cur = connect_to_db(db_name)
 
@@ -195,6 +195,8 @@ def main(pool, db_name, lm_num, tests, filename):
     astar_info = pfds.pop('A*')
     astar = astar_info['class'](G, P)
     baseline = baseline_query(G, L, P, pairs, astar)
+    with open(baseline_file, 'w') as f:
+        json.dump(baseline, f)
 
     # And now test on per-algorithm basis
     for alg, pfd_info in pfds.iteritems():
@@ -227,8 +229,8 @@ def main(pool, db_name, lm_num, tests, filename):
     for alg, avg in avgs.iteritems():
         LOG.info('%25s: %.2f (std_dev: %.2f)', alg, avg, avg_sd[alg])
 
-    # TODO: Saving results to JSON file?
-
+    with open(results_file, 'w') as f:
+        json.dump(results, f)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ALT-Tester')
@@ -238,6 +240,10 @@ if __name__ == '__main__':
     parser.add_argument('--random-pairs', action="store", type=int, default=50)
     parser.add_argument('--pairs-file', action="store")
     parser.add_argument('--processes', action="store", type=int, default=1)
+    parser.add_argument('--baseline-file', action="store",
+                        default='baseline.json')
+    parser.add_argument('--results-file', action="store",
+                        default='results.json')
 
     arguments = parser.parse_args()
 
@@ -247,4 +253,4 @@ if __name__ == '__main__':
 
     # Run the program
     main(pool, arguments.db, arguments.landmarks, arguments.random_pairs,
-         arguments.pairs_file)
+         arguments.pairs_file, arguments.results_file, arguments.baseline_file)
