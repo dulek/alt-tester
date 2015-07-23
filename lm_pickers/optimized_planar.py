@@ -5,6 +5,7 @@ from planar import PlanarLMPicker
 
 LOG = logger.getLogger()
 
+
 class OptimizedPlanarLMPicker(PlanarLMPicker):
     def get_landmarks(self, lm_num=10):
         # At first get landmarks from planar
