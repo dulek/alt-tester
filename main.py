@@ -50,7 +50,7 @@ def load_graph(cur):
                "length FROM roads;")
     cur.execute(road_qr)
     roads = cur.fetchall()
-    for node_from, node_to, fromto, tofrom, length, g in roads:
+    for node_from, node_to, fromto, tofrom, length in roads:
         if fromto:
             G[node_from][node_to] = length
             G_reversed[node_to][node_from] = length
@@ -73,7 +73,7 @@ def load_graph(cur):
     return G, G_reversed, P, center
 
 
-def get_pairs(G, filename, rand_num):
+def get_pairs(G, filename, rand_num, save):
     pairs = []
 
     if filename:
@@ -88,6 +88,14 @@ def get_pairs(G, filename, rand_num):
         dest = random.choice(G.keys())
         if src != dest:
             pairs.append((src, dest))
+
+    if save:
+        json_pairs = []
+        for src, dest in pairs:
+            json_pairs.append({'src': src, 'dest': dest})
+
+        with open(filename, 'w') as f:
+            json.dump(json_pairs, f)
 
     return pairs
 
@@ -180,7 +188,8 @@ def worker(pfd_info, pairs, alg, G, P, center, G_reversed, lm_num, baseline):
     return alg, query(G, P, pairs, pfd, pfd_info['runs'], baseline)
 
 
-def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
+def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file,
+         save_pairs):
     # Connecting to the database
     cur = connect_to_db(db_name)
 
@@ -188,7 +197,8 @@ def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
     G, G_reversed, P, center = load_graph(cur)
 
     # Decide on vertex pairs for the tests
-    pairs = get_pairs(G, filename, tests)
+    pairs = get_pairs(G, filename, tests, save_pairs)
+    return
     results = {}
 
     # A* as baseline first
@@ -244,6 +254,7 @@ if __name__ == '__main__':
                         default='baseline.json')
     parser.add_argument('--results-file', action="store",
                         default='results.json')
+    parser.add_argument('--save-pairs', action="store_true", default=False)
 
     arguments = parser.parse_args()
 
@@ -253,4 +264,5 @@ if __name__ == '__main__':
 
     # Run the program
     main(pool, arguments.db, arguments.landmarks, arguments.random_pairs,
-         arguments.pairs_file, arguments.results_file, arguments.baseline_file)
+         arguments.pairs_file, arguments.results_file, arguments.baseline_file,
+         arguments.save_pairs)
