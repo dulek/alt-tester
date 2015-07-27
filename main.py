@@ -198,7 +198,6 @@ def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file,
 
     # Decide on vertex pairs for the tests
     pairs = get_pairs(G, filename, tests, save_pairs)
-    return
     results = {}
 
     # A* as baseline first
