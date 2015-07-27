@@ -4,7 +4,6 @@ from math import sqrt
 from multiprocessing import Pool
 import os
 import random
-import signal
 
 from colorama import Fore, Style
 from shapely import geometry, wkb
@@ -204,10 +203,9 @@ def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
             alg, res = res
             results[alg] = res
 
-        r = pool.apply_async(worker, args=(pfd_info, pairs, alg, G, L, P,
-                                           center, G_reversed, lm_num,
-                                           baseline),
-                             callback=callback)
+        pool.apply_async(worker, args=(pfd_info, pairs, alg, G, L, P, center,
+                                       G_reversed, lm_num, baseline),
+                         callback=callback)
 
     pool.close()
     pool.join()

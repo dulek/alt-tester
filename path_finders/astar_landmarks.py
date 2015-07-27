@@ -24,8 +24,8 @@ class AStarLandmarks(AStar):
         self.lms, self.lms_dists, self.lms_dists_rev = \
             self.lm_picker.get_landmarks(lm_num)
 
-        with open('lms/lms-%s-%d' % (type(self.lm_picker).__name__,
-                                 self.recalculate_num)) as f:
+        with open('lms/lms-%s-%d.json' % (type(self.lm_picker).__name__,
+                                          self.recalculate_num), 'w') as f:
             json.dump(self.lms, f)
 
         self.recalculate_num += 1
