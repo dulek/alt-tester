@@ -31,7 +31,7 @@ def load_graph(cur):
     G = {}  # Graph
     G_reversed = {}  # Graph with reversed edges - for A* landmarks heuristic
     P = {}  # Geographical points
-    L = {}  # Roads geometries,
+    #L = {}  # Roads geometries,
 
     # Load graph vertices
     node_qr = "SELECT node_id, AsBinary(geometry) AS point FROM roads_nodes;"
@@ -40,23 +40,25 @@ def load_graph(cur):
     for i, g in nodes:
         G_reversed[i] = {}
         G[i] = {}
-        L[i] = {}
+        #L[i] = {}
         P[i] = wkb.loads(str(g))
 
     # Load graph edges
+    # road_qr = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
+    #           "length, AsBinary(geometry) as line FROM roads;")
     road_qr = ("SELECT node_from, node_to, oneway_fromto, oneway_tofrom, "
-               "length, AsBinary(geometry) as line FROM roads;")
+               "length FROM roads;")
     cur.execute(road_qr)
     roads = cur.fetchall()
     for node_from, node_to, fromto, tofrom, length, g in roads:
         if fromto:
             G[node_from][node_to] = length
             G_reversed[node_to][node_from] = length
-            L[node_from][node_to] = wkb.loads(str(g))
+            #L[node_from][node_to] = wkb.loads(str(g))
         if tofrom:
             G[node_to][node_from] = length
             G_reversed[node_from][node_to] = length
-            L[node_to][node_from] = wkb.loads(str(g))
+            #L[node_to][node_from] = wkb.loads(str(g))
 
     # Get node closest to the center
     # Get boundary and center of it
@@ -68,7 +70,7 @@ def load_graph(cur):
     cur.execute(center_query)
     center, _ = cur.fetchone()
 
-    return G, G_reversed, P, L, center
+    return G, G_reversed, P, center
 
 
 def get_pairs(G, filename, rand_num):
@@ -90,7 +92,7 @@ def get_pairs(G, filename, rand_num):
     return pairs
 
 
-def baseline_query(G, L, P, pairs, pfd):
+def baseline_query(G, P, pairs, pfd):
     baseline = {}
 
     for src, dest in pairs:
@@ -105,7 +107,7 @@ def baseline_query(G, L, P, pairs, pfd):
     return baseline
 
 
-def query(G, L, P, pairs, pfd, runs, baseline):
+def query(G, P, pairs, pfd, runs, baseline):
     results = {}
 
     i = 0
@@ -166,7 +168,7 @@ def query(G, L, P, pairs, pfd, runs, baseline):
     return flat_results, std_dev
 
 
-def worker(pfd_info, pairs, alg, G, L, P, center, G_reversed, lm_num, baseline):
+def worker(pfd_info, pairs, alg, G, P, center, G_reversed, lm_num, baseline):
     LOG.info(Fore.RED + 'Starting %s tests.' + Style.RESET_ALL, alg)
 
     if not pfd_info['lm_picker']:
@@ -175,7 +177,7 @@ def worker(pfd_info, pairs, alg, G, L, P, center, G_reversed, lm_num, baseline):
         pfd = pfd_info['class'](G, P, center, G_reversed,
                                 pfd_info['lm_picker'], lm_num)
 
-    return alg, query(G, L, P, pairs, pfd, pfd_info['runs'], baseline)
+    return alg, query(G, P, pairs, pfd, pfd_info['runs'], baseline)
 
 
 def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
@@ -183,7 +185,7 @@ def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
     cur = connect_to_db(db_name)
 
     # Load the graph
-    G, G_reversed, P, L, center = load_graph(cur)
+    G, G_reversed, P, center = load_graph(cur)
 
     # Decide on vertex pairs for the tests
     pairs = get_pairs(G, filename, tests)
@@ -193,7 +195,7 @@ def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
     LOG.info('Baselining with A*.')
     astar_info = pfds.pop('A*')
     astar = astar_info['class'](G, P)
-    baseline = baseline_query(G, L, P, pairs, astar)
+    baseline = baseline_query(G, P, pairs, astar)
     with open(baseline_file, 'w') as f:
         json.dump(baseline, f)
 
@@ -203,7 +205,7 @@ def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file):
             alg, res = res
             results[alg] = res
 
-        pool.apply_async(worker, args=(pfd_info, pairs, alg, G, L, P, center,
+        pool.apply_async(worker, args=(pfd_info, pairs, alg, G, P, center,
                                        G_reversed, lm_num, baseline),
                          callback=callback)
 
