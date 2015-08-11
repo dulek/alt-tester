@@ -13,6 +13,7 @@ LOG = logger.getLogger()
 
 class AvoidLMPicker(LMPicker):
     def get_landmarks(self, lm_num=10):
+        # TODO: This is wrong, we should start with an empty set.
         # First one at random
         first = random.choice(self.G.keys())
         lms = [first]

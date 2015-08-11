@@ -97,9 +97,6 @@ def get_lower_bound(lms, lms_rev, v, dest):
     if not lms:
         return 0
 
-    def get_dist(mapping, node):
-        return mapping[node] if node in mapping else float('inf')
-
     candid = []
     for lm in lms.keys():
         c = get_single_lower_bound(lms[lm], lms_rev[lm], v, dest)
