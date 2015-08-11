@@ -13,19 +13,12 @@ LOG = logger.getLogger()
 
 class AvoidLMPicker(LMPicker):
     def get_landmarks(self, lm_num=10):
-        # TODO: This is wrong, we should start with an empty set.
-        # First one at random
-        first = random.choice(self.G.keys())
-        lms = [first]
+        lms = []
         lm_dists = {}
         lm_dists_rev = {}
 
-        # Calculate distances for new landmark
-        lm_dists[first] = get_lm_distances(self.G, lms)[first]
-        lm_dists_rev[first] = get_lm_distances(self.G_reversed, lms)[first]
-
         # And now real picking begins...
-        for i in range(0, lm_num - 1):
+        for i in range(0, lm_num):
             LOG.info('Calculating landmark ' + Fore.RED + '%d' + Fore.RESET +
                      '...', i)
 
