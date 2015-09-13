@@ -179,13 +179,17 @@ def query(G, P, pairs, pfd, runs, baseline):
 def worker(pfd_info, pairs, alg, G, P, center, G_reversed, lm_num, baseline):
     LOG.info(Fore.RED + 'Starting %s tests.' + Style.RESET_ALL, alg)
 
-    if not pfd_info['lm_picker']:
-        pfd = pfd_info['class'](G, P)
-    else:
-        pfd = pfd_info['class'](G, P, center, G_reversed,
-                                pfd_info['lm_picker'], lm_num)
+    try:
+        if not pfd_info['lm_picker']:
+            pfd = pfd_info['class'](G, P)
+        else:
+            pfd = pfd_info['class'](G, P, center, G_reversed,
+                                    pfd_info['lm_picker'], lm_num)
 
-    return alg, query(G, P, pairs, pfd, pfd_info['runs'], baseline)
+        return alg, query(G, P, pairs, pfd, pfd_info['runs'], baseline)
+    except:
+        import traceback
+        traceback.print_exc()
 
 
 def main(pool, db_name, lm_num, tests, filename, results_file, baseline_file,
