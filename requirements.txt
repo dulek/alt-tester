@@ -12,3 +12,5 @@ descartes
 LatLon
 
 colorama
+
+numpy

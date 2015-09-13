@@ -1,4 +1,5 @@
 from lm_pickers.avoid import AvoidLMPicker
+from lm_pickers.maxcover import MaxcoverPicker
 from lm_pickers.rand import RandomLMPicker
 from lm_pickers.farthest import FarthestLMPicker, FarthestBLMPicker
 from lm_pickers.optimized_farthest import OptimizedFarthestLMPicker,\
@@ -52,6 +53,11 @@ pfds = {
     'ALT-Avoid': {
         'class': AStarLandmarks,
         'lm_picker': AvoidLMPicker,
+        'runs': runs,
+    },
+    'ALT-Maxcover': {
+        'class': AStarLandmarks,
+        'lm_picker': MaxcoverPicker,
         'runs': runs,
     },
     'ALT-OptimizedFarthest': {
